@@ -28,74 +28,13 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppointmentProvider>
-          <DoctorsProvider>
-            <PatientsProvider>
-              <div className="min-h-screen bg-gray-50">
-                <Routes>
-                  {/* Rutas públicas */}
-                  <Route element={<PublicRoute restricted={true} />}>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password/:token" element={<ResetPassword />} />
-                  </Route>
-
-                  {/* Rutas privadas - Admin */}
-                  <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                    <Route
-                      path="/dashboard/admin"
-                      element={
-                        <>
-                          <Navbar />
-                          <DashboardAdmin />
-                        </>
-                      }
-                    />
-                  </Route>
-
-                  {/* Rutas privadas - Doctor */}
-                  <Route element={<PrivateRoute allowedRoles={['doctor']} />}>
-                    <Route
-                      path="/dashboard/doctor"
-                      element={
-                        <>
-                          <Navbar />
-                          <DashboardDoctor />
-                        </>
-                      }
-                    />
-                  </Route>
-
-                  {/* Rutas privadas - Patient */}
-                  <Route element={<PrivateRoute allowedRoles={['patient']} />}>
-                    <Route
-                      path="/dashboard/patient"
-                      element={
-                        <>
-                          <Navbar />
-                          <DashboardPatient />
-                        </>
-                      }
-                    />
-                  </Route>
-
-                  {/* Rutas generales privadas */}
-                  <Route element={<PrivateRoute />}>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route
-                      path="/dashboard"
-                      element={<Navigate to="/dashboard/patient" replace />}
-                    />
-                  </Route>
-
-                  {/* Ruta 404 */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-            </PatientsProvider>
-          </DoctorsProvider>
-        </AppointmentProvider>
+        <div className="min-h-screen bg-gray-50">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </AuthProvider>
     </Router>
   );

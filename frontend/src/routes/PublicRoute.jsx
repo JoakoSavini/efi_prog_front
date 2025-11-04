@@ -1,6 +1,6 @@
 // src/routes/PublicRoute.jsx
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 
 const PublicRoute = ({ restricted = false }) => {
     const { isAuthenticated, user } = useAuth();
