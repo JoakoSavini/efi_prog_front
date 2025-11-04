@@ -1,12 +1,12 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { AppointmentProvider } from './contexts/AppointmentContext';
-import { DoctorsProvider } from './contexts/DoctorsContext';
-import { PatientsProvider } from './contexts/PatientsContext';
+import { AuthProvider } from './contexts/AuthProvider';
+import { AppointmentProvider } from './contexts/AppointmentProvider';
+import { DoctorsProvider } from './contexts/DoctorsProvider';
+import { PatientsProvider } from './contexts/PatientsProvider';
 
 // Routes
-import PrivateRoute from './routes/PrivateRoute';
+import PrivateRoute from './routes/privateroute';
 import PublicRoute from './routes/PublicRoute';
 
 // Pages

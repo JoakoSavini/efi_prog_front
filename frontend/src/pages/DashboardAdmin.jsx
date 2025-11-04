@@ -1,8 +1,8 @@
 // src/pages/DashboardAdmin.jsx
-import { useState, useEffect } from 'react';
-import { useAppointments } from '../contexts/AppointmentContext';
-import { useDoctors } from '../contexts/DoctorsContext';
-import { usePatients } from '../contexts/PatientsContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useAppointments } from '../contexts/useAppointments';
+import { useDoctors } from '../contexts/useDoctors';
+import { usePatients } from '../contexts/usePatients';
 import Loader from '../components/Loader';
 
 const DashboardAdmin = () => {
@@ -19,11 +19,7 @@ const DashboardAdmin = () => {
         cancelledAppointments: 0
     });
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             await Promise.all([
                 fetchAppointments(),
@@ -33,7 +29,11 @@ const DashboardAdmin = () => {
         } catch (error) {
             console.error('Error al cargar datos:', error);
         }
-    };
+    }, [fetchAppointments, fetchDoctors, fetchPatients]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     useEffect(() => {
         if (appointments && doctors && patients) {

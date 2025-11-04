@@ -1,16 +1,7 @@
-// src/contexts/AppointmentContext.jsx
-import { createContext, useContext, useState, useCallback } from 'react';
+// src/contexts/AppointmentProvider.jsx
+import { useState, useCallback } from 'react';
+import AppointmentContext from './AppointmentContext';
 import appointmentsService from '../services/appointments';
-
-const AppointmentContext = createContext();
-
-export const useAppointments = () => {
-    const context = useContext(AppointmentContext);
-    if (!context) {
-        throw new Error('useAppointments debe ser usado dentro de un AppointmentProvider');
-    }
-    return context;
-};
 
 export const AppointmentProvider = ({ children }) => {
     const [appointments, setAppointments] = useState([]);
@@ -163,5 +154,3 @@ export const AppointmentProvider = ({ children }) => {
         </AppointmentContext.Provider>
     );
 };
-
-export default AppointmentContext;

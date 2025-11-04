@@ -1,7 +1,7 @@
 // src/pages/Register.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import Toast from '../components/Toast';
 
 const Register = () => {
@@ -44,7 +44,8 @@ const Register = () => {
         setLoading(true);
 
         try {
-            const { confirmPassword, ...dataToSend } = formData;
+            // Removemos confirmPassword antes de enviar
+            const { confirmPassword: _, ...dataToSend } = formData;
             await register(dataToSend);
             navigate('/dashboard');
         } catch (err) {

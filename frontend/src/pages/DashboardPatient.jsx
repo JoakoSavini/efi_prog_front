@@ -1,7 +1,7 @@
 // src/pages/DashboardPatient.jsx
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useAppointments } from '../contexts/AppointmentContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../contexts/useAuth';
+import { useAppointments } from '../contexts/useAppointments';
 import appointmentsService from '../services/appointments';
 import Loader from '../components/Loader';
 
@@ -15,11 +15,9 @@ const DashboardPatient = () => {
         cancelledAppointments: 0
     });
 
-    useEffect(() => {
-        loadMyAppointments();
-    }, [user]);
-
-    const loadMyAppointments = async () => {
+    const loadMyAppointments = useCallback(async () => {
+        if (!user) return;
+        
         try {
             // Asumiendo que tienes el ID del paciente en user.patientId o user.id
             const data = await appointmentsService.getByPatient(user?.patientId || user?.id);
@@ -37,7 +35,11 @@ const DashboardPatient = () => {
         } catch (error) {
             console.error('Error al cargar citas:', error);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        loadMyAppointments();
+    }, [loadMyAppointments]);
 
     const handleCancelAppointment = async (appointmentId) => {
         if (!window.confirm('¿Estás seguro de cancelar esta cita?')) return;
