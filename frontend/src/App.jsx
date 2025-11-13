@@ -36,10 +36,10 @@ function App() {
         <div className="min-h-screen bg-gray-50">
           <Routes>
             {/* Podemos definir estas rutas para probarlas hasta que funcione la logica del login */}
-            {/* <Route path="/dashboard-doctor" element={<DashboardDoctor />} />
+            <Route path="/dashboard-doctor" element={<DashboardDoctor />} />
             <Route path="/dashboard-patient" element={<DashboardPatient />} />
             <Route path="/dashboard-admin" element={<DashboardAdmin />} />
-             */}
+
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

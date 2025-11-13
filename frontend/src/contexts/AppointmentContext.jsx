@@ -1,6 +1,4 @@
-// src/contexts/AppointmentContext.jsx
-import { createContext } from 'react';
+import { createContext } from "react";
 
-const AppointmentContext = createContext();
-
-export default AppointmentContext;
+// Exportación nombrada
+export const AppointmentContext = createContext();

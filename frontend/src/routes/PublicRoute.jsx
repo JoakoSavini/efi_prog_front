@@ -1,26 +1,32 @@
 // src/routes/PublicRoute.jsx
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../contexts/useAuth';
 
-const PublicRoute = ({ restricted = false }) => {
-    const { isAuthenticated, user } = useAuth();
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext"; // Asumiendo que usas este hook
+import Loader from "../components/Loader"; // 🚨 ¡IMPORTAR EL LOADER!
 
-    // Si la ruta es restringida (como login/register) y el usuario ya está autenticado
-    // redirigir al dashboard correspondiente según su rol
-    if (restricted && isAuthenticated) {
-        switch (user?.role) {
-            case 'admin':
-                return <Navigate to="/dashboard/admin" replace />;
-            case 'doctor':
-                return <Navigate to="/dashboard/doctor" replace />;
-            case 'patient':
-                return <Navigate to="/dashboard/patient" replace />;
-            default:
-                return <Navigate to="/" replace />;
-        }
-    }
+const PublicRoute = () => {
+  const { isAuthenticated, user, loading } = useAuth();
 
-    return <Outlet />;
+  // 🚨 Mostrar el Loader mientras el contexto está cargando
+  if (loading) {
+    return <Loader fullScreen />; // Asume que fullScreen es una prop válida
+  }
+
+  // Si está autenticado, redirigir al dashboard según el rol
+  if (isAuthenticated) {
+    const role = user?.rol; // Roles: 'admin', 'médico', 'paciente'
+
+    if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+    if (role === "médico") return <Navigate to="/medico/dashboard" replace />;
+    if (role === "paciente")
+      return <Navigate to="/paciente/dashboard" replace />;
+
+    // Fallback si el rol no es válido
+    return <Navigate to="/" replace />;
+  }
+
+  // Si no está autenticado, permitir el acceso a la ruta pública
+  return <Outlet />;
 };
 
 export default PublicRoute;

@@ -1,49 +1,71 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/useAuth";
-import Toast from "../components/Toast";
+// 🚨 Importa el hook useAuth que se define en tu contexto
+import { useAuth } from "../contexts/AuthContext";
+// import Toast from "../components/Toast"; // Descomentar si usas este componente
 
 const Login = () => {
   const navigate = useNavigate();
+  // 🚨 Obtener la función de login del contexto
   const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  // Usamos nombres de estado estándar para formularios
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false); // Para mostrar/ocultar password
+
+  const handleChangeEmail = (e) => {
+    setEmail(e.target.value);
+  };
+
+  const handleChangePassword = (e) => {
+    setPassword(e.target.value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      const response = await login(formData);
+      // 1. Crear el objeto de credenciales con los nombres que espera la API
+      const credentials = {
+        correo: email, // Mapea 'email' a 'correo'
+        contraseña: password, // Mapea 'password' a 'contraseña'
+      };
 
-      switch (response.user.role) {
-        case "admin":
-          navigate("/dashboard/admin");
-          break;
-        case "doctor":
-          navigate("/dashboard/doctor");
-          break;
-        case "patient":
-          navigate("/dashboard/patient");
-          break;
-        default:
-          navigate("/");
+      // 2. Llamar a login, que ahora devuelve la respuesta de la API completa.
+      const response = await login(credentials);
+
+      // 3. Acceder al rol para la redirección.
+      // Roles de la API: 'admin', 'médico', 'paciente'
+      const role = response.user?.rol || response.data?.user?.rol;
+
+      if (!role) {
+        throw new Error("Respuesta incompleta: Falta información del rol.");
+      }
+
+      // Lógica de redirección basada en el rol oficial de la API
+      if (role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (role === "médico") {
+        navigate("/medico/dashboard");
+      } else if (role === "paciente") {
+        navigate("/paciente/dashboard");
+      } else {
+        // En caso de que haya un rol desconocido
+        navigate("/");
       }
     } catch (err) {
-      setError(err.message || "Error al iniciar sesión");
+      // Si el error es relanzado por AuthProvider/authService, vendrá con 'message'
+      console.error("Error capturado en el Login.jsx:", err);
+      // Si el error tiene una propiedad message, úsala; si no, usa un mensaje genérico.
+      setError(
+        err.message || "Error al iniciar sesión. Verifica credenciales."
+      );
     } finally {
       setLoading(false);
     }
@@ -66,9 +88,8 @@ const Login = () => {
           </p>
         </div>
 
-        {error && (
-          <Toast message={error} type="error" onClose={() => setError("")} />
-        )}
+        {/* {error && (<Toast message={error} type="error" onClose={() => setError("")} />)} */}
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-1">
@@ -84,8 +105,8 @@ const Login = () => {
                 name="email"
                 type="email"
                 required
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={handleChangeEmail}
                 className="appearance-none relative block w-full px-3 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out bg-white"
                 placeholder="Introduce tu email"
               />
@@ -105,8 +126,8 @@ const Login = () => {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 required
-                value={formData.password}
-                onChange={handleChange}
+                value={password}
+                onChange={handleChangePassword}
                 className="appearance-none relative block w-full pr-10 pl-3 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out bg-white"
                 placeholder="Introduce tu contraseña"
               />
