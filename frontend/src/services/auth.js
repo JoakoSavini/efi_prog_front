@@ -5,12 +5,26 @@ const authService = {
     // Login de usuario
     login: async (credentials) => {
         try {
-            const response = await axiosInstance.post('/auth/login', credentials);
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
+            // map common frontend keys to backend expected ones
+            const payload = {
+                correo: credentials.email || credentials.correo,
+                contraseña: credentials.password || credentials.contraseña
+            };
+            const response = await axiosInstance.post('/auth/login', payload);
+            // backend returns { success, message, data: { token, user } }
+            const data = response.data?.data || {};
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                // normalize role names similar to AuthProvider
+                const backendUser = data.user || null;
+                if (backendUser) {
+                    const normalizedRole = backendUser.rol === 'médico' ? 'doctor' : backendUser.rol === 'paciente' ? 'patient' : backendUser.rol;
+                    const userForFrontend = { ...backendUser, role: normalizedRole };
+                    localStorage.setItem('user', JSON.stringify(userForFrontend));
+                    return { ...data, user: userForFrontend };
+                }
             }
-            return response.data;
+            return data;
         } catch (error) {
             throw error.response?.data || { message: 'Error al iniciar sesión' };
         }
@@ -19,12 +33,28 @@ const authService = {
     // Registro de nuevo usuario
     register: async (userData) => {
         try {
-            const response = await axiosInstance.post('/auth/register', userData);
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
+            const payload = {
+                nombre: userData.nombre || userData.firstName || userData.name,
+                apellido: userData.apellido || userData.lastName || userData.surname,
+                correo: userData.correo || userData.email,
+                contraseña: userData.contraseña || userData.password,
+                rol: userData.rol || userData.role,
+                telefono: userData.telefono || userData.phone,
+                direccion: userData.direccion || userData.address
+            };
+            const response = await axiosInstance.post('/auth/register', payload);
+            const data = response.data?.data || {};
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                const backendUser = data.user || null;
+                if (backendUser) {
+                    const normalizedRole = backendUser.rol === 'médico' ? 'doctor' : backendUser.rol === 'paciente' ? 'patient' : backendUser.rol;
+                    const userForFrontend = { ...backendUser, role: normalizedRole };
+                    localStorage.setItem('user', JSON.stringify(userForFrontend));
+                    return { ...data, user: userForFrontend };
+                }
             }
-            return response.data;
+            return data;
         } catch (error) {
             throw error.response?.data || { message: 'Error al registrar usuario' };
         }
@@ -45,8 +75,8 @@ const authService = {
     // Obtener usuario actual
     getCurrentUser: async () => {
         try {
-            const response = await axiosInstance.get('/auth/me');
-            return response.data;
+            const response = await axiosInstance.get('/auth/profile');
+            return response.data?.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error al obtener usuario' };
         }
