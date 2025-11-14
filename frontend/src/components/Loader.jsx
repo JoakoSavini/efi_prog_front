@@ -1,26 +1,18 @@
-// src/components/Loader.jsx
-const Loader = ({ size = 'medium', fullScreen = false }) => {
-    const sizes = {
-        small: 'w-6 h-6',
-        medium: 'w-12 h-12',
-        large: 'w-16 h-16'
-    };
+import React from "react";
 
-    const loader = (
-        <div className="flex items-center justify-center">
-            <div className={`${sizes[size]} border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin`}></div>
-        </div>
-    );
+const Loader = ({ fullScreen = false }) => {
+  const containerClasses = fullScreen
+    ? "fixed inset-0 flex items-center justify-center bg-gray-50/50 backdrop-blur-sm z-50"
+    : "flex items-center justify-center p-4";
 
-    if (fullScreen) {
-        return (
-            <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-                {loader}
-            </div>
-        );
-    }
-
-    return loader;
+  return (
+    <div className={containerClasses}>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <span className="ml-3 text-indigo-600 font-medium">
+        Cargando datos...
+      </span>
+    </div>
+  );
 };
 
 export default Loader;

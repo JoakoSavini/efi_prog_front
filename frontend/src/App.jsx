@@ -1,4 +1,4 @@
-// src/App.jsx
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,51 +6,122 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthProvider";
+import { useAuth } from "./contexts/useAuth";
+
 import { AppointmentProvider } from "./contexts/AppointmentProvider";
 import { DoctorsProvider } from "./contexts/DoctorsProvider";
 import { PatientsProvider } from "./contexts/PatientsProvider";
 
-// Routes
 import PrivateRoute from "./routes/PrivateRoute";
-import PublicRoute from "./routes/PublicRoute";
-
-// Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
-
-// Dashboards
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardDoctor from "./pages/DashboardDoctor";
 import DashboardPatient from "./pages/DashboardPatient";
 
-// Components
-import Navbar from "./components/Navbar";
+const ROLES = {
+  Admin: "admin",
+  Doctor: "doctor",
+  Patient: "patient",
+};
 
-function App() {
+const RoleBasedRedirect = () => {
+  const { user, isAuthenticated, loading } = useAuth();
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
+        Cargando perfil...
+      </div>
+    );
+  if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
+
+  const role = user.role;
+
+  switch (role) {
+    case ROLES.Admin:
+      return <Navigate to="/dashboard/admin" replace />;
+    case ROLES.Doctor:
+      return <Navigate to="/dashboard/doctor" replace />;
+    case ROLES.Patient:
+      return <Navigate to="/dashboard/patient" replace />;
+    default:
+      console.error("Rol de usuario desconocido o no manejado:", user.role);
+      return <Navigate to="/unauthorized" replace />;
+  }
+};
+
+const App = () => {
   return (
     <Router>
+      {/* 1. AuthProvider (El más externo para manejar la sesión global) */}
       <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
-          <Routes>
-            {/* Podemos definir estas rutas para probarlas hasta que funcione la logica del login */}
-            {/* <Route path="/dashboard-doctor" element={<DashboardDoctor />} />
-            <Route path="/dashboard-patient" element={<DashboardPatient />} />
-            <Route path="/dashboard-admin" element={<DashboardAdmin />} />
-             */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/" element={<Navigate to="/login" />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
+        {/* 2. Providers de Datos (Envuelven las rutas que los necesitan) */}
+        <AppointmentProvider>
+          <DoctorsProvider>
+            <PatientsProvider>
+              <div className="font-sans antialiased text-gray-800">
+                <Routes>
+                  {/* Rutas Públicas */}
+                  <Route path="/" element={<Navigate to="/login" />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/unauthorized"
+                    element={
+                      <div className="text-red-500 font-bold p-8 text-center text-3xl">
+                        ACCESO DENEGADO
+                      </div>
+                    }
+                  />
+
+                  {/* Rutas Protegidas (DashboardAdmin ya tiene acceso a todos los Providers) */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <PrivateRoute
+                        allowedRoles={[
+                          ROLES.Admin,
+                          ROLES.Doctor,
+                          ROLES.Patient,
+                        ]}
+                      />
+                    }
+                  >
+                    <Route index element={<RoleBasedRedirect />} />
+                  </Route>
+
+                  <Route
+                    path="/dashboard/admin"
+                    element={<PrivateRoute allowedRoles={[ROLES.Admin]} />}
+                  >
+                    <Route index element={<DashboardAdmin />} />
+                  </Route>
+
+                  <Route
+                    path="/dashboard/doctor"
+                    element={<PrivateRoute allowedRoles={[ROLES.Doctor]} />}
+                  >
+                    <Route index element={<DashboardDoctor />} />
+                  </Route>
+
+                  <Route
+                    path="/dashboard/patient"
+                    element={<PrivateRoute allowedRoles={[ROLES.Patient]} />}
+                  >
+                    <Route index element={<DashboardPatient />} />
+                  </Route>
+
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+            </PatientsProvider>
+          </DoctorsProvider>
+        </AppointmentProvider>
       </AuthProvider>
     </Router>
   );
-}
+};
 
 export default App;

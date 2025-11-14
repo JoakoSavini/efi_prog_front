@@ -1,116 +1,123 @@
-// src/contexts/AuthProvider.jsx
 import { useState, useEffect, useCallback } from "react";
-import { AuthContext } from "./AuthContext";
+// Último intento de combinación de rutas: con extensión para el archivo JSX local
+import { AuthContext } from "./AuthContext.jsx";
+// Sin extensión para el archivo de servicio
 import api from "../services/api/axiosInstance";
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem("token") || null);
-    const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [loading, setLoading] = useState(true);
 
-    const logout = useCallback(() => {
-        localStorage.removeItem("token");
-        setToken(null);
-        setUser(null);
-    }, []);
+  /**
+   * Normaliza los roles del backend (ej: 'médico') a claves consistentes en MINÚSCULAS
+   */
+  const normalizeRole = (rol) => {
+    if (!rol) return null;
+    const lowerRol = rol.toLowerCase();
 
-    useEffect(() => {
-        if (token) {
-            api.get("/auth/profile")
-                .then((res) => {
-                    // backend returns { success: true, data: user }
-                    const backendUser = res.data?.data || null;
-                    if (backendUser) {
-                        // normalize role names used in frontend
-                        const normalizedRole =
-                            backendUser.rol === 'médico' ? 'doctor' : backendUser.rol === 'paciente' ? 'patient' : backendUser.rol;
-                        setUser({ ...backendUser, role: normalizedRole });
-                    } else {
-                        setUser(null);
-                    }
-                })
-                .catch(() => logout());
-        }
-        setLoading(false);
-    }, [token, logout]);
+    if (lowerRol === "médico") {
+      return "doctor";
+    } else if (lowerRol === "paciente") {
+      return "patient";
+    } else if (lowerRol === "admin" || lowerRol === "administrador") {
+      return "admin";
+    }
 
-    const login = useCallback(async (credentials) => {
-        // map frontend fields (email, password) to backend expected keys (correo, contraseña)
-        const payload = {
-            correo: credentials.email || credentials.correo,
-            contraseña: credentials.password || credentials.contraseña
-        };
+    return lowerRol;
+  };
 
-        const res = await api.post("/auth/login", payload);
-        // backend response shape: { success, message, data: { token, user } }
-        const data = res.data?.data || {};
-        const tokenValue = data.token;
-        const backendUser = data.user || null;
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setToken(null);
+    setUser(null);
+  }, []);
 
-        if (tokenValue) {
-            localStorage.setItem("token", tokenValue);
-            setToken(tokenValue);
-        }
+  const loginUser = useCallback((tokenValue, backendUser) => {
+    if (tokenValue) {
+      localStorage.setItem("token", tokenValue);
+      setToken(tokenValue);
+    }
 
-        let userForFrontend = null;
-        if (backendUser) {
-            const normalizedRole =
-                backendUser.rol === 'médico' ? 'doctor' : backendUser.rol === 'paciente' ? 'patient' : backendUser.rol;
-            userForFrontend = { ...backendUser, role: normalizedRole };
-            localStorage.setItem("user", JSON.stringify(userForFrontend));
-            setUser(userForFrontend);
-        }
+    let userForFrontend = null;
+    if (backendUser) {
+      const normalizedRole = normalizeRole(backendUser.rol || backendUser.role);
+      userForFrontend = { ...backendUser, role: normalizedRole };
+      localStorage.setItem("user", JSON.stringify(userForFrontend));
+      setUser(userForFrontend);
+    }
+    return userForFrontend;
+  }, []);
 
-        return { ...data, user: userForFrontend };
-    }, []);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
 
-    const register = useCallback(async (userData) => {
-        // map common frontend keys to backend expected ones
-        const payload = {
-            nombre: userData.nombre || userData.firstName || userData.name,
-            apellido: userData.apellido || userData.lastName || userData.surname,
-            correo: userData.correo || userData.email,
-            contraseña: userData.contraseña || userData.password,
-            rol: userData.rol || userData.role,
-            telefono: userData.telefono || userData.phone,
-            direccion: userData.direccion || userData.address
-        };
+    if (token) {
+      api
+        .get("/auth/profile")
+        .then((res) => {
+          const backendUser = res.data?.data || null;
+          if (backendUser) {
+            loginUser(token, backendUser);
+          } else {
+            logout();
+          }
+        })
+        .catch(() => logout())
+        .finally(() => setLoading(false));
+    } else if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        // Corrige la advertencia del linter
+      } catch {
+        localStorage.removeItem("user");
+      }
+      setLoading(false);
+    } else {
+      setLoading(false);
+    }
+  }, [token, logout, loginUser]);
 
-        const res = await api.post("/auth/register", payload);
-        const data = res.data?.data || {};
-        const tokenValue = data.token;
-        const backendUser = data.user || null;
+  const login = useCallback(
+    async (credentials) => {
+      const payload = {
+        correo: credentials.email || credentials.correo,
+        contraseña: credentials.password || credentials.contraseña,
+      };
 
-        if (tokenValue) {
-            localStorage.setItem("token", tokenValue);
-            setToken(tokenValue);
-        }
+      const res = await api.post("/auth/login", payload);
+      const data = res.data?.data || {};
 
-        let userForFrontend = null;
-        if (backendUser) {
-            const normalizedRole =
-                backendUser.rol === 'médico' ? 'doctor' : backendUser.rol === 'paciente' ? 'patient' : backendUser.rol;
-            userForFrontend = { ...backendUser, role: normalizedRole };
-            localStorage.setItem("user", JSON.stringify(userForFrontend));
-            setUser(userForFrontend);
-        }
+      const userForFrontend = loginUser(data.token, data.user);
 
-        return { ...data, user: userForFrontend };
-    }, []);
+      return { ...data, user: userForFrontend };
+    },
+    [loginUser]
+  );
 
-    const value = {
-        user,
-        token,
-        login,
-        logout,
-        register,
-        loading,
-        isAuthenticated: !!token
-    };
+  const register = useCallback(
+    async (userData) => {
+      const res = await api.post("/auth/register", userData);
+      const data = res.data?.data || {};
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+      const userForFrontend = loginUser(data.token, data.user);
+
+      return { ...data, user: userForFrontend };
+    },
+    [loginUser]
+  );
+
+  const value = {
+    user,
+    token,
+    login,
+    logout,
+    register,
+    loading,
+    isAuthenticated: !!token && !!user,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
