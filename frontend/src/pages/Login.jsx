@@ -29,7 +29,17 @@ const Login = () => {
     try {
       const response = await login(formData);
 
-      switch (response.user.role) {
+      // 🚨 CORRECCIÓN: Usar encadenamiento opcional (response.user?.role)
+      // Y manejar el caso donde el usuario no se recibe o el rol no existe.
+
+      const userRole = response.user?.role;
+
+      if (!userRole) {
+        // Esto puede pasar si el servidor responde OK pero sin datos de usuario válidos.
+        throw new Error("Respuesta de usuario inválida del servidor.");
+      }
+
+      switch (userRole) {
         case "admin":
           navigate("/dashboard/admin");
           break;
@@ -40,9 +50,10 @@ const Login = () => {
           navigate("/dashboard/patient");
           break;
         default:
-          navigate("/");
+          navigate("/"); // Redirigir a una página predeterminada si el rol es desconocido
       }
     } catch (err) {
+      // Si ocurre un error en el login (401, 500, o el nuevo error lanzado arriba)
       setError(err.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
