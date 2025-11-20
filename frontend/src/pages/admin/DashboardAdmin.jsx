@@ -1,14 +1,14 @@
 // src/pages/DashboardAdmin.jsx
 import { useState, useEffect, useCallback } from "react";
 // 1. Importar useNavigate
-import { useAppointments } from "../contexts/useAppointments";
-import { useDoctors } from "../contexts/useDoctors";
-import { usePatients } from "../contexts/usePatients";
-import Loader from "../components/Loader";
+import { useAppointments } from "../../contexts/useAppointments";
+import { useDoctors } from "../../contexts/useDoctors";
+import { usePatients } from "../../contexts/usePatients";
+import Loader from "../../components/Loader";
 
-import CreatePatientModal from "../components/modals/CreatePatientModal";
-import CreateDoctorModal from "../components/modals/CreateDoctorModal";
-import CreateAppointmentModal from "../components/modals/CreateAppointmentModal";
+import CreatePatientModal from "../../components/modals/CreatePatientModal";
+import CreateDoctorModal from "../../components/modals/CreateDoctorModal";
+import CreateAppointmentModal from "../../components/modals/CreateAppointmentModal";
 
 const DashboardAdmin = () => {
   // 2. Inicializar useNavigate
@@ -74,22 +74,19 @@ const DashboardAdmin = () => {
         totalPatients: patients.length || 0,
         totalDoctors: doctors.length || 0,
         totalAppointments: appointments.length || 0,
-        // ✅ CORRECCIÓN: Verificar ambos formatos (normalizado y original)
         pendingAppointments:
           appointments.filter(
             (app) =>
-              app.status === "programada" ||
-              app.status === "pendiente" ||
               app.estado === "programada" ||
               app.estado === "pendiente"
           ).length || 0,
         completedAppointments:
           appointments.filter(
-            (app) => app.status === "completada" || app.estado === "completada"
+            (app) => app.estado === "completada"
           ).length || 0,
         cancelledAppointments:
           appointments.filter(
-            (app) => app.status === "cancelada" || app.estado === "cancelada"
+            (app) => app.estado === "cancelada"
           ).length || 0,
       });
     }
@@ -104,6 +101,7 @@ const DashboardAdmin = () => {
       icon: "👥",
       color: "bg-blue-500",
       textColor: "text-blue-600",
+      url: "/dashboard/admin/patient/list",
     },
     {
       title: "Total Doctores",
@@ -143,7 +141,7 @@ const DashboardAdmin = () => {
   ];
   // Función helper para obtener el estado normalizado
   const getStatusBadgeClass = (appointment) => {
-    const status = appointment.status || appointment.estado;
+    const status = appointment.estado;
     if (status === "completada") {
       return "bg-green-100 text-green-800";
     } else if (
@@ -156,6 +154,28 @@ const DashboardAdmin = () => {
       return "bg-red-100 text-red-800";
     }
     return "bg-gray-100 text-gray-800";
+  };
+
+  // Función para obtener el nombre del paciente desde el array de pacientes
+  const getPatientName = (appointment) => {
+    if (appointment.id_paciente && patients.length > 0) {
+      const patient = patients.find((p) => p.id === appointment.id_paciente);
+      if (patient) {
+        return `${patient.nombre || ""} ${patient.apellido || ""}`.trim();
+      }
+    }
+    return "N/A";
+  };
+
+  // Función para obtener el nombre del doctor desde el array de doctores
+  const getDoctorName = (appointment) => {
+    if (appointment.id_medico && doctors.length > 0) {
+      const doctor = doctors.find((d) => d.id === appointment.id_medico);
+      if (doctor) {
+        return `${doctor.nombre || ""} ${doctor.apellido || ""}`.trim();
+      }
+    }
+    return "N/A";
   };
 
   return (
@@ -189,7 +209,13 @@ const DashboardAdmin = () => {
                     <dd className={`text-3xl font-semibold ${stat.textColor}`}>
                       {stat.value}
                     </dd>
+                   
                   </dl>
+                  {stat.url && (
+                    <div className="mt-2">
+                      <a href={stat.url}>Ir A</a>
+                    </div>
+                    )}
                 </div>
               </div>
             </div>
@@ -222,30 +248,32 @@ const DashboardAdmin = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {appointments.slice(0, 5).map((appointment, index) => (
-                    <tr key={appointment.id || index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {appointment.patientName || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {appointment.doctorName || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {appointment.date
-                          ? new Date(appointment.date).toLocaleDateString()
-                          : "N/A"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
-                            appointment
-                          )}`}
-                        >
-                          {appointment.status || appointment.estado || "N/A"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {appointments.slice(0, 5).map((appointment, index) => {
+                    return (
+                      <tr key={appointment.id || index}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {getPatientName(appointment)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {getDoctorName(appointment)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {appointment.fecha
+                            ? new Date(appointment.fecha).toLocaleDateString("es-ES")
+                            : "N/A"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(
+                              appointment
+                            )}`}
+                          >
+                            {appointment.estado || "N/A"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

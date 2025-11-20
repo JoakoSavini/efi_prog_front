@@ -5,6 +5,7 @@ const appointmentsService = {
   getAll: async (params = {}) => {
     try {
       const response = await axiosInstance.get("/citas", { params });
+      console.log(response.data);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener citas" };

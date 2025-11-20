@@ -5,16 +5,17 @@ import { usePatients } from "../../contexts/usePatients"; // Asume que este cont
 const initialState = {
   nombre: "",
   apellido: "",
-  correo: "",
-  contraseña: "", // Necesario para crear usuario
+  email: "", 
   telefono: "",
   direccion: "",
   fecha_nacimiento: "",
   // Campos específicos de paciente
-  historia_clinica: "",
-  tipo_sangre: "",
+  numero_historia_clinica: "",
+  genero: "",
+  grupo_sanguineo: "",
   alergias: "",
-  contacto_emergencia: "",
+  antecedentes: "",
+  usuario_id: "", // Este campo se llenará automáticamente en el backend
 };
 
 const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
@@ -43,8 +44,9 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
 
     try {
       // Llamada al context para crear el paciente (que internamente llama al service)
+      console.log(userData);
       const newPatient = await createPatient(userData);
-
+      
       console.log("Paciente creado:", newPatient);
 
       // Si tiene éxito:
@@ -112,24 +114,14 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
             <span className="text-gray-700">Correo Electrónico</span>
             <input
               type="email"
-              name="correo"
-              value={formData.correo}
+              name="email"
+              value={formData.email}
               onChange={handleChange}
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
             />
           </label>
-          <label className="block">
-            <span className="text-gray-700">Contraseña</span>
-            <input
-              type="password"
-              name="contraseña"
-              value={formData.contraseña}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
+        
           <label className="block">
             <span className="text-gray-700">Teléfono</span>
             <input
@@ -168,14 +160,47 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
         </h4>
         <div className="grid grid-cols-2 gap-4">
           <label className="block">
-            <span className="text-gray-700">Tipo de Sangre</span>
+            <span className="text-gray-700">N° Historia Clínica</span>
             <input
               type="text"
-              name="tipo_sangre"
-              value={formData.tipo_sangre}
+              name="numero_historia_clinica"
+              value={formData.numero_historia_clinica}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
             />
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Género</span>
+            <select
+              name="genero"
+              value={formData.genero}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
+            >
+              <option value="">Seleccionar</option>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+              <option value="O">Otro</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Grupo Sanguíneo</span>
+            <select
+              name="grupo_sanguineo"
+              value={formData.grupo_sanguineo}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
+            >
+              <option value="">Seleccionar</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
           </label>
           <label className="block">
             <span className="text-gray-700">Alergias</span>
@@ -184,16 +209,18 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
               name="alergias"
               value={formData.alergias}
               onChange={handleChange}
+              placeholder="Ej: Penicilina, Maní, Latex"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
             />
           </label>
           <label className="block col-span-2">
-            <span className="text-gray-700">Contacto de Emergencia</span>
-            <input
-              type="text"
-              name="contacto_emergencia"
-              value={formData.contacto_emergencia}
+            <span className="text-gray-700">Antecedentes Médicos</span>
+            <textarea
+              name="antecedentes"
+              value={formData.antecedentes}
               onChange={handleChange}
+              rows="3"
+              placeholder="Ej: Diabetes, Hipertensión, Alergias previas..."
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
             />
           </label>

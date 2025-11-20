@@ -1,8 +1,8 @@
 // src/pages/Register.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/useAuth";
-import Toast from "../components/Toast";
+import { useAuth } from "../../contexts/useAuth";
+import Toast from "../../components/Toast";
 
 const Register = () => {
   const navigate = useNavigate();

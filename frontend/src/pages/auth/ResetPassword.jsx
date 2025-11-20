@@ -1,8 +1,8 @@
 // src/pages/ResetPassword.jsx
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import authService from '../services/auth';
-import Toast from '../components/Toast';
+import authService from '../../services/auth';
+import Toast from '../../components/Toast';
 
 const ResetPassword = () => {
     const { token } = useParams();

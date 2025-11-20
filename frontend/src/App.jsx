@@ -13,12 +13,13 @@ import { DoctorsProvider } from "./contexts/DoctorsProvider";
 import { PatientsProvider } from "./contexts/PatientsProvider";
 
 import PrivateRoute from "./routes/PrivateRoute";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 import NotFound from "./pages/NotFound";
-import DashboardAdmin from "./pages/DashboardAdmin";
-import DashboardDoctor from "./pages/DashboardDoctor";
-import DashboardPatient from "./pages/DashboardPatient";
+import DashboardAdmin from "./pages/admin/DashboardAdmin";
+import DashboardDoctor from "./pages/doctor/DashboardDoctor";
+import DashboardPatient from "./pages/paciente/DashboardPatient";
+import TableViewPatient from "./pages/paciente/TableViewPatient";
 
 const ROLES = {
   Admin: "admin",
@@ -111,6 +112,15 @@ const App = () => {
                     element={<PrivateRoute allowedRoles={[ROLES.Patient]} />}
                   >
                     <Route index element={<DashboardPatient />} />
+                  </Route>
+
+                  <Route
+                    path="/dashboard/admin/patient/list"
+                    element={<PrivateRoute allowedRoles={[ROLES.Admin]} />}
+
+                  >
+                    <Route index element={<TableViewPatient />}/>
+
                   </Route>
 
                   <Route path="*" element={<NotFound />} />

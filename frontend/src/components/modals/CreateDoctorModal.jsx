@@ -1,7 +1,7 @@
 // src/components/Modals/CreateDoctorModal.jsx
 import { useState, useEffect } from "react";
-import { useDoctors } from "../../contexts/useDoctors"; // Asume que este context está disponible
-
+import { useDoctors } from "../../contexts/useDoctors";
+import doctorsService from "../../services/doctors";
 // Asume que el componente Modal base es el mismo que en CreatePatientModal
 const ModalComponent = ({ children, title, onClose }) => (
   <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
@@ -35,16 +35,11 @@ const ModalComponent = ({ children, title, onClose }) => (
 const initialDoctorState = {
   nombre: "",
   apellido: "",
-  correo: "",
-  contraseña: "", // Para la creación del usuario
+  email: "",
   telefono: "",
-  direccion: "",
-  fecha_nacimiento: "",
-
-  // Campos específicos de Médico
-  especialidad_id: "",
   matricula: "",
-  anos_experiencia: "",
+  especialidad_id: "",
+  usuario_id: "",
 };
 
 const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
@@ -63,9 +58,8 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
     const loadSpecialties = async () => {
       setLoadingSpecialties(true);
       try {
-        // Asume que doctorsService.getSpecialties existe y está accesible
-        const { getSpecialties } = await import("../../services/doctors");
-        const data = await getSpecialties();
+        const data = await doctorsService.getSpecialties();
+        console.log("Especialidades cargadas:", data);
         setSpecialties(data);
       } catch (err) {
         console.error("Error cargando especialidades:", err);
@@ -76,7 +70,6 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
     };
 
     if (isOpen) {
-      // Solo importa y llama al servicio cuando el modal se abre
       loadSpecialties();
     }
   }, [isOpen]);
@@ -93,22 +86,16 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
     e.preventDefault();
     setSubmissionError(null);
 
-    // Los datos para la API de creación de médico
+    // Los datos para la API de creación de médico - solo los campos del initialDoctorState
     const doctorData = {
-      // Campos de Usuario
       nombre: formData.nombre,
       apellido: formData.apellido,
-      correo: formData.correo,
-      contraseña: formData.contraseña,
+      email: formData.email,
       telefono: formData.telefono,
-      direccion: formData.direccion,
-      fecha_nacimiento: formData.fecha_nacimiento,
-      rol: "médico", // El rol es clave
-
-      // Campos específicos de Médico
-      especialidad_id: formData.especialidad_id,
       matricula: formData.matricula,
-      anos_experiencia: formData.anos_experiencia,
+      especialidad_id: formData.especialidad_id,
+      usuario_id: formData.usuario_id,
+      rol: "médico",
     };
 
     if (!doctorData.especialidad_id || !doctorData.matricula) {
@@ -119,9 +106,7 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     try {
-      // 📝 Tu `createDoctor` en el context debe manejar la creación del Usuario y el Perfil de Médico.
       const newDoctor = await createDoctor(doctorData);
-
       console.log("Doctor creado:", newDoctor);
 
       if (onSuccess) onSuccess();
@@ -156,7 +141,7 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
           Datos de Usuario (Requerido)
         </h4>
         <div className="grid grid-cols-2 gap-4">
-          {/* Nombre, Apellido, Correo, Contraseña, Teléfono, F. Nacimiento, Dirección... (Igual que en paciente) */}
+          {/* Nombre, Apellido, email, Contraseña, Teléfono, F. Nacimiento, Dirección... (Igual que en paciente) */}
           <label className="block">
             <span className="text-gray-700">Nombre</span>
             <input
@@ -183,8 +168,8 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
             <span className="text-gray-700">Correo Electrónico</span>
             <input
               type="email"
-              name="correo"
-              value={formData.correo}
+              name="email"
+              value={formData.email}
               onChange={handleChange}
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-2"
@@ -195,7 +180,7 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
             <input
               type="password"
               name="contraseña"
-              value={formData.contraseña}
+              value={formData.contraseña || ""}
               onChange={handleChange}
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-2"

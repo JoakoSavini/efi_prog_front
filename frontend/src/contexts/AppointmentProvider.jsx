@@ -7,38 +7,19 @@ export const AppointmentProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const normalizeAppointment = (app) => ({
-    id: app.id,
-    patientName: app.paciente?.usuario
-      ? `${app.paciente.usuario.nombre || ""} ${
-          app.paciente.usuario.apellido || ""
-        }`.trim()
-      : "Sin nombre",
-    doctorName: app.medico?.usuario
-      ? `${app.medico.usuario.nombre || ""} ${
-          app.medico.usuario.apellido || ""
-        }`.trim()
-      : "Sin médico",
-    date: app.fecha_hora,
-    status: app.estado,
-    motivo: app.motivo,
-    consultorio: app.consultorio?.nombre,
-  });
-
   const fetchAppointments = useCallback(async (params = {}) => {
     setLoading(true);
     setError(null);
     try {
-      // La API retorna directamente un array, NO { data: [...] }
       const data = await appointmentsService.getAll(params);
+      console.log("Datos recibidos de la API de citas:", data);
 
       if (!Array.isArray(data)) {
         throw new Error("Formato inesperado en la API");
       }
 
-      const normalized = data.map(normalizeAppointment);
-      setAppointments(normalized);
-      return normalized;
+      setAppointments(data);
+      return data;
     } catch (err) {
       const errorMsg = err.message || "Error al cargar citas";
       setError(errorMsg);
@@ -53,14 +34,13 @@ export const AppointmentProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      // La API retorna directamente el objeto, NO { data: {...} }
       const data = await appointmentsService.getById(id);
 
       if (!data || typeof data !== "object") {
         throw new Error("Formato inesperado de la cita");
       }
 
-      return normalizeAppointment(data);
+      return data;
     } catch (err) {
       const errorMsg = err.message || "Error al cargar cita";
       setError(errorMsg);
@@ -76,9 +56,8 @@ export const AppointmentProvider = ({ children }) => {
     setError(null);
     try {
       const data = await appointmentsService.create(appointmentData);
-      const normalized = normalizeAppointment(data);
-      setAppointments((prev) => [...prev, normalized]);
-      return normalized;
+      setAppointments((prev) => [...prev, data]);
+      return data;
     } catch (err) {
       const errorMsg = err.message || "Error al crear cita";
       setError(errorMsg);
@@ -94,11 +73,10 @@ export const AppointmentProvider = ({ children }) => {
     setError(null);
     try {
       const data = await appointmentsService.update(id, appointmentData);
-      const normalized = normalizeAppointment(data);
       setAppointments((prev) =>
-        prev.map((app) => (app.id === id ? normalized : app))
+        prev.map((app) => (app.id === id ? data : app))
       );
-      return normalized;
+      return data;
     } catch (err) {
       const errorMsg = err.message || "Error al actualizar cita";
       setError(errorMsg);
@@ -130,14 +108,13 @@ export const AppointmentProvider = ({ children }) => {
     setError(null);
     try {
       const response = await appointmentsService.cancel(id, motivo_cancelacion);
-      // La respuesta es { message: "...", cita: {...} }
-      const normalized = normalizeAppointment(response.cita);
+      const data = response.cita || response;
 
       setAppointments((prev) =>
-        prev.map((app) => (app.id === id ? normalized : app))
+        prev.map((app) => (app.id === id ? data : app))
       );
 
-      return normalized;
+      return data;
     } catch (err) {
       const errorMsg = err.message || "Error al cancelar cita";
       setError(errorMsg);
@@ -153,14 +130,13 @@ export const AppointmentProvider = ({ children }) => {
     setError(null);
     try {
       const response = await appointmentsService.confirm(id);
-      // La respuesta es { message: "...", cita: {...} }
-      const normalized = normalizeAppointment(response.cita);
+      const data = response.cita || response;
 
       setAppointments((prev) =>
-        prev.map((app) => (app.id === id ? normalized : app))
+        prev.map((app) => (app.id === id ? data : app))
       );
 
-      return normalized;
+      return data;
     } catch (err) {
       const errorMsg = err.message || "Error al confirmar cita";
       setError(errorMsg);
@@ -176,14 +152,13 @@ export const AppointmentProvider = ({ children }) => {
     setError(null);
     try {
       const response = await appointmentsService.complete(id);
-      // La respuesta es { message: "...", cita: {...} }
-      const normalized = normalizeAppointment(response.cita);
+      const data = response.cita || response;
 
       setAppointments((prev) =>
-        prev.map((app) => (app.id === id ? normalized : app))
+        prev.map((app) => (app.id === id ? data : app))
       );
 
-      return normalized;
+      return data;
     } catch (err) {
       const errorMsg = err.message || "Error al completar cita";
       setError(errorMsg);

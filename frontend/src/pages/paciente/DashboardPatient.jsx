@@ -1,9 +1,9 @@
 // src/pages/DashboardPatient.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contexts/useAuth';
-import { useAppointments } from '../contexts/useAppointments';
-import appointmentsService from '../services/appointments';
-import Loader from '../components/Loader';
+import { useAuth } from '../../contexts/useAuth';
+import { useAppointments } from '../../contexts/useAppointments';
+import appointmentsService from '../../services/appointments';
+import Loader from '../../components/Loader';
 
 const DashboardPatient = () => {
     const { user } = useAuth();
