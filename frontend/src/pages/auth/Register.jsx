@@ -6,7 +6,7 @@ import Toast from "../../components/Toast";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, user: authUser } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -45,9 +45,28 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const { confirmPassword: _, ...dataToSend } = formData;
-      await register(dataToSend);
-      navigate("/dashboard");
+      const { confirmPassword: _, name, role, phone, dni, ...rest } = formData;
+      // split name into nombre/apellido when possible
+      const [firstName, ...lastParts] = (name || "").trim().split(" ");
+      const lastName = lastParts.join(" ") || "";
+      const payload = {
+        nombre: firstName || rest.nombre || "",
+        apellido: lastName || rest.apellido || "",
+        correo: formData.email,
+        contraseña: formData.password,
+        rol: role === "doctor" ? "médico" : "paciente",
+        telefono: phone,
+        dni: dni,
+      };
+
+      const res = await register(payload);
+      // Prefer the normalized role returned in response, fallback to auth context
+      const userRole = res.user?.role || authUser?.role || res.user?.rol;
+
+      if (userRole === "admin" || userRole === "administrador") navigate("/dashboard/admin");
+      else if (userRole === "doctor" || userRole === "médico") navigate("/dashboard/doctor");
+      else if (userRole === "patient" || userRole === "paciente") navigate("/dashboard/patient");
+      else navigate("/");
     } catch (err) {
       setError(err.message || "Error al registrar usuario");
     } finally {

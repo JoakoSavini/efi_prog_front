@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { AuthContext } from "./AuthContext.jsx";
 // Sin extensión para el archivo de servicio
 import api from "../services/api/axiosInstance";
+import authService from "../services/auth";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -82,32 +83,47 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(
     async (credentials) => {
-      const payload = {
-        correo: credentials.email || credentials.correo,
-        contraseña: credentials.password || credentials.contraseña,
-      };
+      // Delegate to authService which normalizes and stores token/user
+      const res = await authService.login(credentials);
+      // authService returns { token, user } or similar shape
+      const tokenValue = res?.token || localStorage.getItem("token");
+      const backendUser = res?.user || authService.getStoredUser();
+      const userForFrontend = loginUser(tokenValue, backendUser);
 
-      const res = await api.post("/auth/login", payload);
-      const data = res.data?.data || {};
-
-      const userForFrontend = loginUser(data.token, data.user);
-
-      return { ...data, user: userForFrontend };
+      return { ...res, user: userForFrontend };
     },
     [loginUser]
   );
 
   const register = useCallback(
     async (userData) => {
-      const res = await api.post("/auth/register", userData);
-      const data = res.data?.data || {};
+      const res = await authService.register(userData);
+      const tokenValue = res?.token || localStorage.getItem("token");
+      const backendUser = res?.user || authService.getStoredUser();
+      const userForFrontend = loginUser(tokenValue, backendUser);
 
-      const userForFrontend = loginUser(data.token, data.user);
-
-      return { ...data, user: userForFrontend };
+      return { ...res, user: userForFrontend };
     },
     [loginUser]
   );
+
+  const refreshProfile = useCallback(async () => {
+    if (!token) return null;
+    try {
+      const res = await api.get("/auth/profile");
+      const backendUser = res.data?.data || null;
+      if (backendUser) {
+        const normalizedRole = normalizeRole(backendUser.rol || backendUser.role);
+        const userForFrontend = { ...backendUser, role: normalizedRole };
+        localStorage.setItem("user", JSON.stringify(userForFrontend));
+        setUser(userForFrontend);
+        return userForFrontend;
+      }
+    } catch (err) {
+      console.error("Error al refrescar perfil:", err);
+    }
+    return null;
+  }, [token, normalizeRole]);
 
   const value = {
     user,
@@ -117,6 +133,7 @@ export const AuthProvider = ({ children }) => {
     register,
     loading,
     isAuthenticated: !!token && !!user,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

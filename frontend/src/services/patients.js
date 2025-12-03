@@ -5,7 +5,7 @@ const patientsService = {
   getAll: async (params = {}) => {
     try {
       const response = await axiosInstance.get("/pacientes", { params });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener pacientes" };
     }
@@ -15,7 +15,7 @@ const patientsService = {
   getById: async (id) => {
     try {
       const response = await axiosInstance.get(`/pacientes/${id}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener paciente" };
     }
@@ -25,7 +25,7 @@ const patientsService = {
   create: async (patientData) => {
     try {
       const response = await axiosInstance.post("/pacientes", patientData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al crear paciente" };
     }
@@ -35,7 +35,7 @@ const patientsService = {
   update: async (id, patientData) => {
     try {
       const response = await axiosInstance.put(`/pacientes/${id}`, patientData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al actualizar paciente" };
     }
@@ -45,7 +45,7 @@ const patientsService = {
   delete: async (id) => {
     try {
       const response = await axiosInstance.delete(`/pacientes/${id}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al eliminar paciente" };
     }
@@ -57,7 +57,7 @@ const patientsService = {
       const response = await axiosInstance.get("/historiales", {
         params: { paciente_id: patientId },
       });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw (
         error.response?.data || { message: "Error al obtener historial médico" }
@@ -69,7 +69,7 @@ const patientsService = {
   createMedicalHistory: async (historyData) => {
     try {
       const response = await axiosInstance.post("/historiales", historyData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw (
         error.response?.data || {
@@ -85,7 +85,7 @@ const patientsService = {
       const response = await axiosInstance.get("/pacientes", {
         params: { search: query },
       });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al buscar paciente" };
     }

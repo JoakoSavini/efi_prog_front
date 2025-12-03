@@ -5,7 +5,7 @@ import Toast from "../../components/Toast";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user: authUser } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -32,26 +32,17 @@ const Login = () => {
       // 🚨 CORRECCIÓN: Usar encadenamiento opcional (response.user?.role)
       // Y manejar el caso donde el usuario no se recibe o el rol no existe.
 
-      const userRole = response.user?.role;
+      // Prefer normalized role from response, fallback to auth context
+      const userRole = response.user?.role || authUser?.role || response.user?.rol;
 
       if (!userRole) {
-        // Esto puede pasar si el servidor responde OK pero sin datos de usuario válidos.
         throw new Error("Respuesta de usuario inválida del servidor.");
       }
 
-      switch (userRole) {
-        case "admin":
-          navigate("/dashboard/admin");
-          break;
-        case "doctor":
-          navigate("/dashboard/doctor");
-          break;
-        case "patient":
-          navigate("/dashboard/patient");
-          break;
-        default:
-          navigate("/"); // Redirigir a una página predeterminada si el rol es desconocido
-      }
+      if (userRole === "admin" || userRole === "administrador") navigate("/dashboard/admin");
+      else if (userRole === "doctor" || userRole === "médico") navigate("/dashboard/doctor");
+      else if (userRole === "patient" || userRole === "paciente") navigate("/dashboard/patient");
+      else navigate("/");
     } catch (err) {
       // Si ocurre un error en el login (401, 500, o el nuevo error lanzado arriba)
       setError(err.message || "Error al iniciar sesión");

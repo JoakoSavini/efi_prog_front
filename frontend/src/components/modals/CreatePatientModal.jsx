@@ -6,6 +6,7 @@ const initialState = {
   nombre: "",
   apellido: "",
   email: "", 
+  contraseña: "",
   telefono: "",
   direccion: "",
   fecha_nacimiento: "",
@@ -44,7 +45,7 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
 
     try {
       // Llamada al context para crear el paciente (que internamente llama al service)
-      console.log(userData);
+        console.log("Creando paciente con datos:", userData);
       const newPatient = await createPatient(userData);
       
       console.log("Paciente creado:", newPatient);
@@ -56,10 +57,11 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
     } catch (err) {
       console.error("Error al crear paciente:", err);
       // Usar el mensaje de error del backend o uno por defecto
-      const errMsg =
-        err.message ||
-        contextError ||
-        "Error desconocido al crear el paciente.";
+        const errMsg =
+          err.response?.data?.message ||
+          err.message ||
+          contextError ||
+          "Error desconocido al crear el paciente.";
       setSubmissionError(errMsg);
     }
   };
@@ -116,6 +118,17 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
               type="email"
               name="email"
               value={formData.email}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
+            />
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Contraseña</span>
+            <input
+              type="password"
+              name="contraseña"
+              value={formData.contraseña || ""}
               onChange={handleChange}
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"

@@ -20,6 +20,9 @@ import DashboardAdmin from "./pages/admin/DashboardAdmin";
 import DashboardDoctor from "./pages/doctor/DashboardDoctor";
 import DashboardPatient from "./pages/paciente/DashboardPatient";
 import TableViewPatient from "./pages/paciente/TableViewPatient";
+import DoctorsTable from "./pages/admin/DoctorsTable";
+import PatientsTable from "./pages/admin/PatientsTable";
+import AppointmentsTable from "./pages/admin/AppointmentsTable";
 
 const ROLES = {
   Admin: "admin",
@@ -119,8 +122,21 @@ const App = () => {
                     element={<PrivateRoute allowedRoles={[ROLES.Admin]} />}
 
                   >
-                    <Route index element={<TableViewPatient />}/>
+                    <Route index element={<PatientsTable />}/>
 
+                  </Route>
+                  <Route
+                    path="/dashboard/admin/doctor/list"
+                    element={<PrivateRoute allowedRoles={[ROLES.Admin]} />}
+                  >
+                    <Route index element={<DoctorsTable />} />
+                  </Route>
+
+                  <Route
+                    path="/dashboard/admin/appointments/list"
+                    element={<PrivateRoute allowedRoles={[ROLES.Admin]} />}
+                  >
+                    <Route index element={<AppointmentsTable />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />

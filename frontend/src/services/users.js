@@ -5,7 +5,7 @@ const usersService = {
   getAll: async (params = {}) => {
     try {
       const response = await axiosInstance.get("/usuarios", { params });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener usuarios" };
     }
@@ -15,7 +15,7 @@ const usersService = {
   getById: async (id) => {
     try {
       const response = await axiosInstance.get(`/usuarios/${id}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener usuario" };
     }
@@ -25,7 +25,7 @@ const usersService = {
   create: async (userData) => {
     try {
       const response = await axiosInstance.post("/usuarios", userData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al crear usuario" };
     }
@@ -35,7 +35,7 @@ const usersService = {
   update: async (id, userData) => {
     try {
       const response = await axiosInstance.put(`/usuarios/${id}`, userData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al actualizar usuario" };
     }
@@ -45,7 +45,7 @@ const usersService = {
   delete: async (id) => {
     try {
       const response = await axiosInstance.delete(`/usuarios/${id}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al eliminar usuario" };
     }

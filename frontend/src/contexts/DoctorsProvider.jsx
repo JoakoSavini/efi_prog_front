@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import DoctorsContext from "./DoctorsContext";
 import doctorsService from "../services/doctors";
 import usersService from "../services/users";
+import api from "../services/api/axiosInstance";
 
 export const DoctorsProvider = ({ children }) => {
   const [doctors, setDoctors] = useState([]);
@@ -50,9 +51,26 @@ export const DoctorsProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await doctorsService.create(doctorData);
-      setDoctors((prev) => [...prev, data]);
-      return data;
+      // Create via the auth register endpoint so the backend applies the same
+      // registration logic (password hashing, defaults) as public register.
+      const payload = {
+        nombre: doctorData.nombre,
+        apellido: doctorData.apellido,
+        correo: doctorData.email || doctorData.correo,
+        contraseña: doctorData.contraseña || doctorData.password,
+        rol: doctorData.rol || "médico",
+        telefono: doctorData.telefono,
+        direccion: doctorData.direccion,
+        // doctor-specific
+        matricula: doctorData.matricula,
+        especialidad_id: doctorData.especialidad_id,
+      };
+
+      const res = await api.post("/auth/register", payload);
+      const created = res.data?.data?.user || res.data?.data || res.data;
+      // keep provider list in sync
+      setDoctors((prev) => [...prev, created]);
+      return created;
     } catch (err) {
       const errorMsg = err.message || "Error al crear doctor";
       setError(errorMsg);
@@ -67,7 +85,8 @@ export const DoctorsProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await doctorsService.update(id, doctorData);
+      // update via usersService to keep records consistent
+      const data = await usersService.update(id, { ...doctorData, rol: doctorData.rol || 'médico' });
       setDoctors((prev) => prev.map((doc) => (doc.id === id ? data : doc)));
       return data;
     } catch (err) {
@@ -84,7 +103,8 @@ export const DoctorsProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      await doctorsService.delete(id);
+      // delete via usersService (doctor is a user)
+      await usersService.delete(id);
       setDoctors((prev) => prev.filter((doc) => doc.id !== id));
     } catch (err) {
       const errorMsg = err.message || "Error al eliminar doctor";

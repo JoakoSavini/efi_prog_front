@@ -5,7 +5,7 @@ const doctorsService = {
   getAll: async (params = {}) => {
     try {
       const response = await axiosInstance.get("/medicos", { params });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener doctores" };
     }
@@ -15,7 +15,7 @@ const doctorsService = {
   getById: async (id) => {
     try {
       const response = await axiosInstance.get(`/medicos/${id}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener doctor" };
     }
@@ -25,7 +25,7 @@ const doctorsService = {
   create: async (doctorData) => {
     try {
       const response = await axiosInstance.post("/medicos", doctorData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al crear doctor" };
     }
@@ -35,7 +35,7 @@ const doctorsService = {
   update: async (id, doctorData) => {
     try {
       const response = await axiosInstance.put(`/medicos/${id}`, doctorData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al actualizar doctor" };
     }
@@ -45,7 +45,7 @@ const doctorsService = {
   delete: async (id) => {
     try {
       const response = await axiosInstance.delete(`/medicos/${id}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al eliminar doctor" };
     }
@@ -55,7 +55,7 @@ const doctorsService = {
   getSpecialties: async () => {
     try {
       const response = await axiosInstance.get("/especialidades");
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw (
         error.response?.data || { message: "Error al obtener especialidades" }
@@ -69,7 +69,7 @@ const doctorsService = {
       const response = await axiosInstance.get("/medicos", {
         params: { especialidad_id: especialidadId },
       });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw (
         error.response?.data || {
@@ -85,7 +85,7 @@ const doctorsService = {
       const response = await axiosInstance.get("/disponibilidades", {
         params: { medico_id: doctorId, activa: true },
       });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw (
         error.response?.data || { message: "Error al obtener disponibilidad" }
@@ -100,7 +100,7 @@ const doctorsService = {
         "/disponibilidades",
         availabilityData
       );
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw (
         error.response?.data || { message: "Error al crear disponibilidad" }

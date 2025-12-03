@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/useAuth";
 import Modal from "./Modal";
 import { useAppointments } from "../../contexts/useAppointments";
 
-import doctorsService from "../../services/doctors";
-import patientsService from "../../services/patients";
+import usersService from "../../services/users";
 import consultoriosService from "../../services/consultorios";
 
 const initialAppointmentState = {
@@ -21,6 +21,7 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
     loading: loadingContext,
     error: contextError,
   } = useAppointments();
+  const { user } = useAuth();
   const [formData, setFormData] = useState(initialAppointmentState);
   const [submissionError, setSubmissionError] = useState(null);
 
@@ -38,13 +39,28 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
       setSubmissionError(null);
 
       try {
-        // 1. Obtener Doctores
-        const doctorsData = await doctorsService.getAll();
-        setDoctors(doctorsData);
+        // 1. Obtener Doctores (usamos usersService filtrando por rol para evitar mezclar usuarios)
+        const doctorsData = await usersService.getAll({ rol: "médico" });
+        setDoctors(Array.isArray(doctorsData) ? doctorsData : []);
 
         // 2. Obtener Pacientes
-        const patientsData = await patientsService.getAll();
-        setPatients(patientsData);
+        if (user && user.role === "patient") {
+          // If logged-in user is a patient, only allow creating for themselves
+          const pid = user.id || user.usuario?.id || user.patientId || user.paciente_id;
+          if (pid) {
+            const me = Array.isArray(user) ? user[0] : user;
+            // ensure we have a normalized patient object
+            setPatients([{ id: pid, usuario: { nombre: me.nombre || me.usuario?.nombre || me.name || "", apellido: me.apellido || me.usuario?.apellido || "" }, correo: me.correo || me.email || me.usuario?.email }]);
+            setFormData((prev) => ({ ...prev, id_paciente: Number(pid) }));
+          } else {
+            // fallback to fetching patients list
+            const patientsData = await usersService.getAll({ rol: "paciente" });
+            setPatients(Array.isArray(patientsData) ? patientsData : []);
+          }
+        } else {
+          const patientsData = await usersService.getAll({ rol: "paciente" });
+          setPatients(Array.isArray(patientsData) ? patientsData : []);
+        }
 
         // 3. Obtener Consultorios
         const consultoriosData = await consultoriosService.getAll();
@@ -61,7 +77,7 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
     };
 
     loadMasterData();
-  }, [isOpen]); // Dependencia del estado del modal
+  }, [isOpen, user]); // Dependencia del estado del modal y user
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,6 +102,11 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
       motivo: formData.motivo,
       notas: formData.notas,
     };
+
+    // Ensure newly created appointments have a default status (backend may vary)
+    if (!appointmentData.estado) {
+      appointmentData.estado = "pendiente";
+    }
 
     if (
       !appointmentData.medico_id ||
@@ -153,14 +174,17 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
                 <option value="" disabled>
                   Seleccione un Médico
                 </option>
-                {doctors.map((doc) => (
-                  <option key={doc.id} value={doc.id}>
-                    {/* Asume que el doctor tiene un campo usuario que tiene nombre y apellido */}
-                    {doc.usuario
-                      ? `${doc.usuario.nombre} ${doc.usuario.apellido}`
-                      : `Médico ID: ${doc.id}`}
-                  </option>
-                ))}
+                {doctors.map((doc) => {
+                  const name = doc.usuario?.nombre || doc.nombre || doc.name || "";
+                  const last = doc.usuario?.apellido || doc.apellido || "";
+                  const email = doc.correo || doc.email || doc.usuario?.email || "";
+                  const label = (name || last) ? `${name} ${last}`.trim() : (email || `Médico ${doc.id}`);
+                  return (
+                    <option key={doc.id} value={doc.id}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </label>
 
@@ -177,14 +201,17 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
                 <option value="" disabled>
                   Seleccione un Paciente
                 </option>
-                {patients.map((pat) => (
-                  <option key={pat.id} value={pat.id}>
-                    {/* Asume que el paciente tiene un campo usuario que tiene nombre y apellido */}
-                    {pat.usuario
-                      ? `${pat.usuario.nombre} ${pat.usuario.apellido}`
-                      : `Paciente ID: ${pat.id}`}
-                  </option>
-                ))}
+                {patients.map((pat) => {
+                  const name = pat.usuario?.nombre || pat.nombre || pat.name || "";
+                  const last = pat.usuario?.apellido || pat.apellido || "";
+                  const email = pat.correo || pat.email || pat.usuario?.email || "";
+                  const label = (name || last) ? `${name} ${last}`.trim() : (email || `Paciente ${pat.id}`);
+                  return (
+                    <option key={pat.id} value={pat.id}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </label>
 

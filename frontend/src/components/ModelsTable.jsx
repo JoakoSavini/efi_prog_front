@@ -20,6 +20,7 @@ import {
   DialogActions,
   TextField,
   Tooltip,
+  MenuItem,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -43,6 +44,9 @@ export default function ModelsTable({
   onDelete = async () => {},
   initialPageSize = 10,
   title = "Modelos",
+  showCreate = true,
+  showEdit = true,
+  showDelete = true,
 }) {
   const [selectedId, setSelectedId] = useState(null);
   const [page, setPage] = useState(0);
@@ -129,37 +133,43 @@ export default function ModelsTable({
     <Paper className="p-4">
       <Toolbar className="flex justify-between">
         <Typography variant="h6">{title}</Typography>
-        <Box className="flex gap-2">
-          <Tooltip title="Crear">
-            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
-              Crear
-            </Button>
-          </Tooltip>
-          <Tooltip title="Editar">
-            <span>
-              <Button
-                variant="outlined"
-                startIcon={<EditIcon />}
-                onClick={handleOpenEdit}
-                disabled={!selectedRow}
-              >
-                Editar
+          <Box className="flex gap-2">
+          {showCreate && (
+            <Tooltip title="Crear">
+              <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
+                Crear
               </Button>
-            </span>
-          </Tooltip>
-          <Tooltip title="Eliminar">
-            <span>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={handleOpenDelete}
-                disabled={!selectedRow}
-              >
-                Eliminar
-              </Button>
-            </span>
-          </Tooltip>
+            </Tooltip>
+          )}
+          {showEdit && (
+            <Tooltip title="Editar">
+              <span>
+                <Button
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                  onClick={handleOpenEdit}
+                  disabled={!selectedRow}
+                >
+                  Editar
+                </Button>
+              </span>
+            </Tooltip>
+          )}
+          {showDelete && (
+            <Tooltip title="Eliminar">
+              <span>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleOpenDelete}
+                  disabled={!selectedRow}
+                >
+                  Eliminar
+                </Button>
+              </span>
+            </Tooltip>
+          )}
           <Tooltip title="Exportar PDF">
             <IconButton onClick={handleExportCSV}>
               <FileDownloadIcon />
@@ -236,17 +246,40 @@ export default function ModelsTable({
           <Box className="flex flex-col gap-3">
             {columns
               .filter((c) => c.editable !== false)
-              .map((col) => (
-                <TextField
-                  key={col.field}
-                  label={col.headerName ?? col.field}
-                  value={formState[col.field] ?? ""}
-                  onChange={(e) => handleChangeField(col.field, e.target.value)}
-                  fullWidth
-                  type={col.type ?? "text"}
-                  variant="outlined"
-                />
-              ))}
+              .map((col) => {
+                const value = formState[col.field] ?? "";
+                if (Array.isArray(col.options) && col.options.length > 0) {
+                  return (
+                    <TextField
+                      key={col.field}
+                      select
+                      label={col.headerName ?? col.field}
+                      value={value}
+                      onChange={(e) => handleChangeField(col.field, e.target.value)}
+                      fullWidth
+                      variant="outlined"
+                    >
+                      {col.options.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  );
+                }
+
+                return (
+                  <TextField
+                    key={col.field}
+                    label={col.headerName ?? col.field}
+                    value={value}
+                    onChange={(e) => handleChangeField(col.field, e.target.value)}
+                    fullWidth
+                    type={col.type ?? "text"}
+                    variant="outlined"
+                  />
+                );
+              })}
           </Box>
         </DialogContent>
         <DialogActions>

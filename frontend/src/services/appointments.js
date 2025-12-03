@@ -5,8 +5,7 @@ const appointmentsService = {
   getAll: async (params = {}) => {
     try {
       const response = await axiosInstance.get("/citas", { params });
-      console.log(response.data);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener citas" };
     }
@@ -16,7 +15,7 @@ const appointmentsService = {
   getById: async (id) => {
     try {
       const response = await axiosInstance.get(`/citas/${id}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al obtener cita" };
     }
@@ -26,7 +25,7 @@ const appointmentsService = {
   create: async (appointmentData) => {
     try {
       const response = await axiosInstance.post("/citas", appointmentData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al crear cita" };
     }
@@ -36,7 +35,7 @@ const appointmentsService = {
   update: async (id, appointmentData) => {
     try {
       const response = await axiosInstance.put(`/citas/${id}`, appointmentData);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al actualizar cita" };
     }
@@ -46,7 +45,7 @@ const appointmentsService = {
   delete: async (id) => {
     try {
       const response = await axiosInstance.delete(`/citas/${id}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al eliminar cita" };
     }
@@ -56,7 +55,7 @@ const appointmentsService = {
   getByPatient: async (patientId) => {
     try {
       const response = await axiosInstance.get(`/citas/paciente/${patientId}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw (
         error.response?.data || {
@@ -70,7 +69,7 @@ const appointmentsService = {
   getByDoctor: async (doctorId) => {
     try {
       const response = await axiosInstance.get(`/citas/medico/${doctorId}`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw (
         error.response?.data || { message: "Error al obtener citas del doctor" }
@@ -84,7 +83,7 @@ const appointmentsService = {
       const response = await axiosInstance.patch(`/citas/${id}/cancelar`, {
         motivo_cancelacion,
       });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al cancelar cita" };
     }
@@ -94,7 +93,7 @@ const appointmentsService = {
   confirm: async (id) => {
     try {
       const response = await axiosInstance.patch(`/citas/${id}/confirmar`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al confirmar cita" };
     }
@@ -104,7 +103,7 @@ const appointmentsService = {
   complete: async (id) => {
     try {
       const response = await axiosInstance.patch(`/citas/${id}/completar`);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Error al completar cita" };
     }
