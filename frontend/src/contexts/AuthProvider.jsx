@@ -5,6 +5,30 @@ import { AuthContext } from "./AuthContext.jsx";
 import api from "../services/api/axiosInstance";
 import authService from "../services/auth";
 
+// --- Funciones Seguras para LocalStorage ---
+
+const getStoredUser = () => {
+  const user = localStorage.getItem("user");
+  // Esto previene el SyntaxError si 'user' es null o undefined
+  try {
+    return user ? JSON.parse(user) : null;
+  } catch (e) {
+    console.error("Error al parsear el usuario del localStorage:", e);
+    return null;
+  }
+};
+
+const getStoredToken = () => {
+  return localStorage.getItem("token") || null;
+};
+
+const removeAuthData = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+};
+
+// --- Componente AuthProvider ---
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);

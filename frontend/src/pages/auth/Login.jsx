@@ -10,24 +10,33 @@ const Login = () => {
     email: "",
     password: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  // Usamos nombres de estado estándar para formularios
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false); // Para mostrar/ocultar password
+
+  const handleChangeEmail = (e) => {
+    setEmail(e.target.value);
+  };
+
+  const handleChangePassword = (e) => {
+    setPassword(e.target.value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      const response = await login(formData);
+      // 1. Crear el objeto de credenciales con los nombres que espera la API
+      const credentials = {
+        correo: email, // Mapea 'email' a 'correo'
+        contraseña: password, // Mapea 'password' a 'contraseña'
+      };
 
       // 🚨 CORRECCIÓN: Usar encadenamiento opcional (response.user?.role)
       // Y manejar el caso donde el usuario no se recibe o el rol no existe.
@@ -68,9 +77,8 @@ const Login = () => {
           </p>
         </div>
 
-        {error && (
-          <Toast message={error} type="error" onClose={() => setError("")} />
-        )}
+        {/* {error && (<Toast message={error} type="error" onClose={() => setError("")} />)} */}
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-1">
@@ -86,8 +94,8 @@ const Login = () => {
                 name="email"
                 type="email"
                 required
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={handleChangeEmail}
                 className="appearance-none relative block w-full px-3 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out bg-white"
                 placeholder="Introduce tu email"
               />
@@ -107,8 +115,8 @@ const Login = () => {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 required
-                value={formData.password}
-                onChange={handleChange}
+                value={password}
+                onChange={handleChangePassword}
                 className="appearance-none relative block w-full pr-10 pl-3 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out bg-white"
                 placeholder="Introduce tu contraseña"
               />
