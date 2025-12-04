@@ -10,6 +10,11 @@ const EditPatientModal = ({ isOpen, onClose, patient, onSuccess }) => {
     email: "",
     telefono: "",
     direccion: "",
+    numero_historia_clinica: "",
+    genero: "",
+    grupo_sanguineo: "",
+    alergias: "",
+    antecedentes: "",
   });
   const [submissionError, setSubmissionError] = useState(null);
 
@@ -18,9 +23,14 @@ const EditPatientModal = ({ isOpen, onClose, patient, onSuccess }) => {
       setFormData({
         nombre: patient.nombre || patient.usuario?.nombre || "",
         apellido: patient.apellido || patient.usuario?.apellido || "",
-        email: patient.email || patient.usuario?.email || "",
+        email: patient.email || patient.usuario?.correo || "",
         telefono: patient.telefono || patient.usuario?.telefono || "",
-        direccion: patient.direccion || "",
+        direccion: patient.direccion || patient.usuario?.direccion || "",
+        numero_historia_clinica: patient.numero_historia_clinica || "",
+        genero: patient.genero || "",
+        grupo_sanguineo: patient.grupo_sanguineo || "",
+        alergias: patient.alergias || "",
+        antecedentes: patient.antecedentes || "",
       });
     }
   }, [patient]);
@@ -40,12 +50,13 @@ const EditPatientModal = ({ isOpen, onClose, patient, onSuccess }) => {
       return;
     }
     const payload = {
-      nombre: formData.nombre,
-      apellido: formData.apellido,
-      correo: formData.email,  // Backend espera 'correo', no 'email'
-      email: formData.email,   // Enviar ambos por compatibilidad
+      numero_historia_clinica: formData.numero_historia_clinica,
       telefono: formData.telefono,
       direccion: formData.direccion,
+      genero: formData.genero,
+      grupo_sanguineo: formData.grupo_sanguineo,
+      alergias: formData.alergias,
+      antecedentes: formData.antecedentes,
     };
 
     try {
@@ -91,6 +102,44 @@ const EditPatientModal = ({ isOpen, onClose, patient, onSuccess }) => {
           <label className="block col-span-2">
             <span className="text-gray-700">Dirección</span>
             <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" />
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <label className="block">
+            <span className="text-gray-700">N° Historia Clínica</span>
+            <input type="text" name="numero_historia_clinica" value={formData.numero_historia_clinica} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" />
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Género</span>
+            <select name="genero" value={formData.genero} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+              <option value="">Seleccionar</option>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Grupo Sanguíneo</span>
+            <select name="grupo_sanguineo" value={formData.grupo_sanguineo} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+              <option value="">Seleccionar</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Alergias</span>
+            <input type="text" name="alergias" value={formData.alergias} onChange={handleChange} placeholder="Ej: Penicilina, Maní, Latex" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" />
+          </label>
+          <label className="block col-span-2">
+            <span className="text-gray-700">Antecedentes Médicos</span>
+            <textarea name="antecedentes" value={formData.antecedentes} onChange={handleChange} rows="3" placeholder="Ej: Diabetes, Hipertensión, Alergias previas..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" />
           </label>
         </div>
 

@@ -34,7 +34,7 @@ const EditAppointmentModal = ({ isOpen, onClose, appointment, onSuccess }) => {
     const loadMasters = async () => {
       setLoadingMasters(true);
       try {
-        const docs = await doctorsService.getAll();
+        const docs = await doctorsService.getAll({ estado: true });
         setDoctors(docs || []);
         const pats = await patientsService.getAll();
         setPatients(pats || []);

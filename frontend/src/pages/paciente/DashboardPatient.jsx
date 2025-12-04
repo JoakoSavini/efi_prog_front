@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/useAuth';
 import { useAppointments } from '../../contexts/useAppointments';
 import appointmentsService from '../../services/appointments';
-import usersService from '../../services/users';
+import doctorsService from '../../services/doctors';
 import Loader from '../../components/Loader';
 import CreateAppointmentModal from '../../components/modals/CreateAppointmentModal';
 import EditPatientModal from '../../components/modals/EditPatientModal';
@@ -85,8 +85,8 @@ const DashboardPatient = () => {
         const loadDoctors = async () => {
             setLoadingDoctors(true);
             try {
-                // Pedimos la lista de usuarios filtrando por rol 'médico' para evitar mostrar usuarios que no lo son
-                const data = await usersService.getAll({ rol: 'médico' });
+                // Usar doctorsService con filtro de estado activo
+                const data = await doctorsService.getAll({ estado: true });
                 setDoctors(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error('Error cargando doctores disponibles:', err);

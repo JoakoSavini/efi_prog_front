@@ -63,11 +63,11 @@ const doctorsService = {
     }
   },
 
-  // Obtener doctores por especialidad (CORREGIDO)
-  getBySpecialty: async (especialidadId) => {
+  // Obtener doctores por especialidad
+  getBySpecialty: async (especialidadId, params = {}) => {
     try {
       const response = await axiosInstance.get("/medicos", {
-        params: { especialidad_id: especialidadId },
+        params: { id_especialidad: especialidadId, ...params },
       });
       return response.data?.data || response.data;
     } catch (error) {

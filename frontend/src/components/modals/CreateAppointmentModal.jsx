@@ -4,6 +4,7 @@ import Modal from "./Modal";
 import { useAppointments } from "../../contexts/useAppointments";
 
 import usersService from "../../services/users";
+import doctorsService from "../../services/doctors";
 import consultoriosService from "../../services/consultorios";
 
 const initialAppointmentState = {
@@ -39,8 +40,8 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
       setSubmissionError(null);
 
       try {
-        // 1. Obtener Doctores (usamos usersService filtrando por rol para evitar mezclar usuarios)
-        const doctorsData = await usersService.getAll({ rol: "médico" });
+        // 1. Obtener Doctores activos usando doctorsService
+        const doctorsData = await doctorsService.getAll({ estado: true });
         setDoctors(Array.isArray(doctorsData) ? doctorsData : []);
 
         // 2. Obtener Pacientes

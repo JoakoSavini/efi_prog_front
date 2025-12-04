@@ -1,8 +1,6 @@
 import { useState, useCallback } from "react";
 import DoctorsContext from "./DoctorsContext";
 import doctorsService from "../services/doctors";
-import usersService from "../services/users";
-import api from "../services/api/axiosInstance";
 
 export const DoctorsProvider = ({ children }) => {
   const [doctors, setDoctors] = useState([]);
@@ -13,14 +11,14 @@ export const DoctorsProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await usersService.getAll({ ...params, rol: "médico" });
-
-      if (!Array.isArray(data)) {
-        throw new Error("Formato inesperado en doctores");
-      }
-
-      setDoctors(data);
-      return data;
+      // Siempre filtrar por estado activo
+      const data = await doctorsService.getAll({ ...params, estado: true });
+      
+      // La respuesta del backend puede ser un array directamente
+      const doctorsArray = Array.isArray(data) ? data : [];
+      
+      setDoctors(doctorsArray);
+      return doctorsArray;
     } catch (err) {
       const errorMsg = err.message || "Error al cargar doctores";
       setError(errorMsg);
@@ -51,24 +49,19 @@ export const DoctorsProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      // Create via the auth register endpoint so the backend applies the same
-      // registration logic (password hashing, defaults) as public register.
+      // Payload que coincida con el modelo Médico del backend
       const payload = {
         nombre: doctorData.nombre,
         apellido: doctorData.apellido,
-        correo: doctorData.email || doctorData.correo,
-        contraseña: doctorData.contraseña || doctorData.password,
-        rol: doctorData.rol || "médico",
+        email: doctorData.email,
         telefono: doctorData.telefono,
-        direccion: doctorData.direccion,
-        // doctor-specific
         matricula: doctorData.matricula,
-        especialidad_id: doctorData.especialidad_id,
+        especialidad_id: parseInt(doctorData.especialidad_id)
       };
 
-      const res = await api.post("/auth/register", payload);
-      const created = res.data?.data?.user || res.data?.data || res.data;
-      // keep provider list in sync
+      const created = await doctorsService.create(payload);
+      
+      // Actualizar lista local
       setDoctors((prev) => [...prev, created]);
       return created;
     } catch (err) {
@@ -85,10 +78,25 @@ export const DoctorsProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      // update via usersService to keep records consistent
-      const data = await usersService.update(id, { ...doctorData, rol: doctorData.rol || 'médico' });
-      setDoctors((prev) => prev.map((doc) => (doc.id === id ? data : doc)));
-      return data;
+      // Payload que coincida con el modelo Médico del backend
+      const payload = {
+        nombre: doctorData.nombre,
+        apellido: doctorData.apellido,
+        email: doctorData.email,
+        telefono: doctorData.telefono,
+        matricula: doctorData.matricula,
+        id_especialidad: parseInt(doctorData.especialidad_id || doctorData.id_especialidad),
+        horario_inicio: doctorData.horario_inicio,
+        horario_fin: doctorData.horario_fin,
+        dias_trabajo: doctorData.dias_trabajo,
+        estado: doctorData.estado !== undefined ? doctorData.estado : true
+      };
+
+      const updated = await doctorsService.update(id, payload);
+      
+      // Actualizar lista local
+      setDoctors((prev) => prev.map((doc) => (doc.id === id ? updated : doc)));
+      return updated;
     } catch (err) {
       const errorMsg = err.message || "Error al actualizar doctor";
       setError(errorMsg);
@@ -102,14 +110,44 @@ export const DoctorsProvider = ({ children }) => {
   const deleteDoctor = useCallback(async (id) => {
     setLoading(true);
     setError(null);
+    console.log("Deleting doctor with id:", id);
     try {
-      // delete via usersService (doctor is a user)
-      await usersService.delete(id);
+      // El delete del backend hace soft delete (estado: false)
+      await doctorsService.delete(id);
+      
+      // Actualizar lista local - remover el doctor
       setDoctors((prev) => prev.filter((doc) => doc.id !== id));
     } catch (err) {
       const errorMsg = err.message || "Error al eliminar doctor";
       setError(errorMsg);
       console.error("Error en deleteDoctor:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Funciones adicionales para trabajar con especialidades
+  const getSpecialties = useCallback(async () => {
+    try {
+      return await doctorsService.getSpecialties();
+    } catch (err) {
+      console.error("Error al cargar especialidades:", err);
+      throw err;
+    }
+  }, []);
+
+  const getDoctorsBySpecialty = useCallback(async (especialidadId, params = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Siempre filtrar por estado activo
+      const data = await doctorsService.getBySpecialty(especialidadId, { ...params, estado: true });
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      const errorMsg = err.message || "Error al cargar doctores por especialidad";
+      setError(errorMsg);
+      console.error("Error en getDoctorsBySpecialty:", err);
       throw err;
     } finally {
       setLoading(false);
@@ -125,6 +163,8 @@ export const DoctorsProvider = ({ children }) => {
     createDoctor,
     updateDoctor,
     deleteDoctor,
+    getSpecialties,
+    getDoctorsBySpecialty,
   };
 
   return (

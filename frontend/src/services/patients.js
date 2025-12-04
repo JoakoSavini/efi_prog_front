@@ -51,6 +51,26 @@ const patientsService = {
     }
   },
 
+  // Obtener paciente por número de historia clínica
+  getByHistoriaClinica: async (numeroHistoria) => {
+    try {
+      const response = await axiosInstance.get(`/pacientes/historia/${numeroHistoria}`);
+      return response.data?.data || response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Error al obtener paciente por historia clínica" };
+    }
+  },
+
+  // Obtener citas del paciente
+  getCitas: async (patientId, params = {}) => {
+    try {
+      const response = await axiosInstance.get(`/pacientes/${patientId}/citas`, { params });
+      return response.data?.data || response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Error al obtener citas del paciente" };
+    }
+  },
+
   // Obtener historial médico del paciente (CORREGIDO)
   getMedicalHistory: async (patientId) => {
     try {
@@ -79,7 +99,7 @@ const patientsService = {
     }
   },
 
-  // Buscar paciente (CORREGIDO)
+  // Buscar paciente
   search: async (query) => {
     try {
       const response = await axiosInstance.get("/pacientes", {

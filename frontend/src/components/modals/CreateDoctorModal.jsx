@@ -39,7 +39,6 @@ const initialDoctorState = {
   telefono: "",
   matricula: "",
   especialidad_id: "",
-  usuario_id: "",
 };
 
 const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
@@ -93,9 +92,7 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
       email: formData.email,
       telefono: formData.telefono,
       matricula: formData.matricula,
-      especialidad_id: formData.especialidad_id,
-      usuario_id: formData.usuario_id,
-      rol: "médico",
+      especialidad_id: parseInt(formData.especialidad_id),
     };
 
     if (!doctorData.especialidad_id || !doctorData.matricula) {
@@ -104,6 +101,8 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
       );
       return;
     }
+
+    console.log("Datos a enviar para crear doctor:", doctorData);
 
     try {
       const newDoctor = await createDoctor(doctorData);
@@ -176,42 +175,11 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
             />
           </label>
           <label className="block">
-            <span className="text-gray-700">Contraseña</span>
-            <input
-              type="password"
-              name="contraseña"
-              value={formData.contraseña || ""}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
-          <label className="block">
             <span className="text-gray-700">Teléfono</span>
             <input
               type="tel"
               name="telefono"
               value={formData.telefono}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
-          <label className="block">
-            <span className="text-gray-700">F. Nacimiento</span>
-            <input
-              type="date"
-              name="fecha_nacimiento"
-              value={formData.fecha_nacimiento}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
-          <label className="block col-span-2">
-            <span className="text-gray-700">Dirección</span>
-            <input
-              type="text"
-              name="direccion"
-              value={formData.direccion}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-2"
             />
@@ -258,17 +226,7 @@ const CreateDoctorModal = ({ isOpen, onClose, onSuccess }) => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-2"
             />
           </label>
-          <label className="block">
-            <span className="text-gray-700">Años de Experiencia</span>
-            <input
-              type="number"
-              name="anos_experiencia"
-              value={formData.anos_experiencia}
-              onChange={handleChange}
-              min="0"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
+
         </div>
 
         <div className="flex justify-end pt-4 space-x-3 border-t border-gray-200">

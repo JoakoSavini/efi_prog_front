@@ -5,8 +5,7 @@ import { usePatients } from "../../contexts/usePatients"; // Asume que este cont
 const initialState = {
   nombre: "",
   apellido: "",
-  email: "", 
-  contraseña: "",
+  email: "",
   telefono: "",
   direccion: "",
   fecha_nacimiento: "",
@@ -16,7 +15,6 @@ const initialState = {
   grupo_sanguineo: "",
   alergias: "",
   antecedentes: "",
-  usuario_id: "", // Este campo se llenará automáticamente en el backend
 };
 
 const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
@@ -37,16 +35,15 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
     e.preventDefault();
     setSubmissionError(null);
 
-    // Los datos para crear el usuario deben incluir el rol "paciente"
-    const userData = {
-      ...formData,
-      rol: "paciente",
-    };
+    // Validación básica
+    if (!formData.nombre || !formData.email || !formData.numero_historia_clinica) {
+      setSubmissionError("Nombre, email y número de historia clínica son campos requeridos");
+      return;
+    }
 
     try {
-      // Llamada al context para crear el paciente (que internamente llama al service)
-        console.log("Creando paciente con datos:", userData);
-      const newPatient = await createPatient(userData);
+      console.log("Creando paciente con datos:", formData);
+      const newPatient = await createPatient(formData);
       
       console.log("Paciente creado:", newPatient);
 
@@ -57,11 +54,11 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
     } catch (err) {
       console.error("Error al crear paciente:", err);
       // Usar el mensaje de error del backend o uno por defecto
-        const errMsg =
-          err.response?.data?.message ||
-          err.message ||
-          contextError ||
-          "Error desconocido al crear el paciente.";
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        contextError ||
+        "Error desconocido al crear el paciente.";
       setSubmissionError(errMsg);
     }
   };
@@ -123,17 +120,7 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
             />
           </label>
-          <label className="block">
-            <span className="text-gray-700">Contraseña</span>
-            <input
-              type="password"
-              name="contraseña"
-              value={formData.contraseña || ""}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
+
         
           <label className="block">
             <span className="text-gray-700">Teléfono</span>

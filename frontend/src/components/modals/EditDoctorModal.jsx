@@ -12,6 +12,10 @@ const EditDoctorModal = ({ isOpen, onClose, doctor, onSuccess }) => {
     telefono: "",
     matricula: "",
     especialidad_id: "",
+    horario_inicio: "",
+    horario_fin: "",
+    dias_trabajo: "",
+    estado: true,
   });
   const [specialties, setSpecialties] = useState([]);
   const [loadingSpecs, setLoadingSpecs] = useState(false);
@@ -38,10 +42,14 @@ const EditDoctorModal = ({ isOpen, onClose, doctor, onSuccess }) => {
       setFormData({
         nombre: doctor.nombre || (doctor.usuario && doctor.usuario.nombre) || "",
         apellido: doctor.apellido || (doctor.usuario && doctor.usuario.apellido) || "",
-        email: doctor.email || (doctor.usuario && doctor.usuario.email) || "",
+        email: doctor.email || (doctor.usuario && doctor.usuario.correo) || "",
         telefono: doctor.telefono || doctor.usuario?.telefono || "",
         matricula: doctor.matricula || "",
-        especialidad_id: doctor.especialidad_id || doctor.especialidad?.id || "",
+        especialidad_id: doctor.especialidad_id || doctor.id_especialidad || doctor.especialidad?.id || "",
+        horario_inicio: doctor.horario_inicio || "",
+        horario_fin: doctor.horario_fin || "",
+        dias_trabajo: doctor.dias_trabajo || "",
+        estado: doctor.estado !== undefined ? doctor.estado : true,
       });
     }
   }, [doctor]);
@@ -63,11 +71,14 @@ const EditDoctorModal = ({ isOpen, onClose, doctor, onSuccess }) => {
     const payload = {
       nombre: formData.nombre,
       apellido: formData.apellido,
-      correo: formData.email,  // Backend espera 'correo', no 'email'
-      email: formData.email,   // Enviar ambos por compatibilidad
+      email: formData.email,
       telefono: formData.telefono,
       matricula: formData.matricula,
       especialidad_id: formData.especialidad_id,
+      horario_inicio: formData.horario_inicio,
+      horario_fin: formData.horario_fin,
+      dias_trabajo: formData.dias_trabajo,
+      estado: formData.estado,
     };
 
     try {
@@ -118,6 +129,52 @@ const EditDoctorModal = ({ isOpen, onClose, doctor, onSuccess }) => {
             <select name="especialidad_id" value={formData.especialidad_id} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
               <option value="">Seleccione...</option>
               {specialties.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <label className="block">
+            <span className="text-gray-700">Horario Inicio</span>
+            <input 
+              type="time" 
+              name="horario_inicio" 
+              value={formData.horario_inicio} 
+              onChange={handleChange} 
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" 
+            />
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Horario Fin</span>
+            <input 
+              type="time" 
+              name="horario_fin" 
+              value={formData.horario_fin} 
+              onChange={handleChange} 
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" 
+            />
+          </label>
+          <label className="block col-span-2">
+            <span className="text-gray-700">Días de Trabajo</span>
+            <input 
+              type="text" 
+              name="dias_trabajo" 
+              value={formData.dias_trabajo} 
+              onChange={handleChange} 
+              placeholder="Ej: Lunes a Viernes, Lunes-Miércoles-Viernes"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" 
+            />
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Estado</span>
+            <select 
+              name="estado" 
+              value={formData.estado} 
+              onChange={(e) => setFormData(prev => ({...prev, estado: e.target.value === 'true'}))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+            >
+              <option value={true}>Activo</option>
+              <option value={false}>Inactivo</option>
             </select>
           </label>
         </div>
