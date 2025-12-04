@@ -49,12 +49,16 @@ const Register = () => {
       // split name into nombre/apellido when possible
       const [firstName, ...lastParts] = (name || "").trim().split(" ");
       const lastName = lastParts.join(" ") || "";
+      
+      // Mapear el rol del frontend al backend correctamente
+      const backendRole = role === "doctor" ? "médico" : "paciente";
+      
       const payload = {
         nombre: firstName || rest.nombre || "",
         apellido: lastName || rest.apellido || "",
         correo: formData.email,
         contraseña: formData.password,
-        rol: role === "doctor" ? "médico" : "paciente",
+        rol: backendRole,
         telefono: phone,
         dni: dni,
       };
@@ -62,6 +66,10 @@ const Register = () => {
       const res = await register(payload);
       // Prefer the normalized role returned in response, fallback to auth context
       const userRole = res.user?.role || authUser?.role || res.user?.rol;
+
+      if (!userRole) {
+        throw new Error("Respuesta de usuario inválida del servidor.");
+      }
 
       if (userRole === "admin" || userRole === "administrador") navigate("/dashboard/admin");
       else if (userRole === "doctor" || userRole === "médico") navigate("/dashboard/doctor");

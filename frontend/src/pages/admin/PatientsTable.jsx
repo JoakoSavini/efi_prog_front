@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Box, CircularProgress, Container, Typography } from "@mui/material";
 import ModelsTable from "../../components/ModelsTable";
+import CreatePatientModal from "../../components/modals/CreatePatientModal";
 import patientsService from "../../services/patients";
+import usersService from "../../services/users";
+import { usePatients } from "../../contexts/usePatients";
 
 export default function PatientsTable() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const { createPatient } = usePatients();
 
   const columns = [
     { field: "id", headerName: "ID", editable: false },
@@ -26,22 +31,21 @@ export default function PatientsTable() {
   async function loadPatients() {
     setLoading(true);
     try {
-      // Usar el endpoint de pacientes directamente
-      const data = await patientsService.getAll();
+      const data = await usersService.getAll({ rol: "paciente", limit: 1000 });
       const list = Array.isArray(data) ? data : [];
-      // Normalize shape for the table basado en el modelo Paciente
-      const normalized = list.map((p) => ({
-        id: p.id,
-        nombre: p.usuario?.nombre || p.nombre || "",
-        apellido: p.usuario?.apellido || "",
-        email: p.usuario?.correo || p.usuario?.email || "",
-        telefono: p.telefono || p.usuario?.telefono || "",
-        direccion: p.direccion || p.usuario?.direccion || "",
-        numero_historia_clinica: p.numero_historia_clinica || "",
-        genero: p.genero || "",
-        grupo_sanguineo: p.grupo_sanguineo || "",
-        creado: p.creado || "",
-        raw: p,
+      
+      const normalized = list.map((u) => ({
+        id: u.id,
+        nombre: u.nombre || "",
+        apellido: u.apellido || "",
+        email: u.correo || u.email || "",
+        telefono: u.telefono || "",
+        direccion: u.direccion || u.paciente?.direccion || "",
+        numero_historia_clinica: u.paciente?.numero_historia_clinica || "",
+        genero: u.paciente?.genero || "",
+        grupo_sanguineo: u.paciente?.grupo_sanguineo || "",
+        creado: u.creado || "",
+        raw: u,
       }));
       setRows(normalized);
     } catch (err) {
@@ -65,23 +69,8 @@ export default function PatientsTable() {
   }
 
   async function handleCreate(newData) {
-    try {
-      const payload = {
-        ...buildPayload(newData),
-        nombre: newData.nombre,
-        apellido: newData.apellido,
-        email: newData.email,
-      };
-      
-      // Crear vía el servicio de pacientes
-      const created = await patientsService.create(payload);
-      if (created && created.id) {
-        await loadPatients();
-      }
-    } catch (err) {
-      console.error("Error creando paciente:", err);
-      throw err;
-    }
+    // Abrir el modal en lugar de crear directamente
+    setCreateModalOpen(true);
   }
 
   async function handleUpdate(updated) {
@@ -121,16 +110,26 @@ export default function PatientsTable() {
           <CircularProgress />
         </Box>
       ) : (
-        <ModelsTable
-          title="Pacientes"
-          columns={columns}
-          rows={rows}
-          getRowId={(r) => r.id}
-          onCreate={handleCreate}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          initialPageSize={10}
-        />
+        <>
+          <ModelsTable
+            title="Pacientes"
+            columns={columns}
+            rows={rows}
+            getRowId={(r) => r.id}
+            onCreate={handleCreate}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            initialPageSize={10}
+          />
+          <CreatePatientModal
+            isOpen={createModalOpen}
+            onClose={() => setCreateModalOpen(false)}
+            onSuccess={() => {
+              loadPatients();
+              setCreateModalOpen(false);
+            }}
+          />
+        </>
       )}
     </Container>
   );

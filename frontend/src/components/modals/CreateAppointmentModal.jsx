@@ -42,10 +42,11 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
       try {
         // 1. Obtener Doctores activos usando doctorsService
         const doctorsData = await doctorsService.getAll({ estado: true });
-        setDoctors(Array.isArray(doctorsData) ? doctorsData : []);
+        const doctorsList = Array.isArray(doctorsData) ? doctorsData : doctorsData?.data || [];
+        setDoctors(doctorsList);
 
         // 2. Obtener Pacientes
-        if (user && user.role === "patient") {
+        if (user && (user.role === "patient" || user.role === "paciente")) {
           // If logged-in user is a patient, only allow creating for themselves
           const pid = user.id || user.usuario?.id || user.patientId || user.paciente_id;
           if (pid) {
@@ -56,16 +57,19 @@ const CreateAppointmentModal = ({ isOpen, onClose, onSuccess }) => {
           } else {
             // fallback to fetching patients list
             const patientsData = await usersService.getAll({ rol: "paciente" });
-            setPatients(Array.isArray(patientsData) ? patientsData : []);
+            const patientsList = Array.isArray(patientsData) ? patientsData : patientsData?.data || [];
+            setPatients(patientsList);
           }
         } else {
           const patientsData = await usersService.getAll({ rol: "paciente" });
-          setPatients(Array.isArray(patientsData) ? patientsData : []);
+          const patientsList = Array.isArray(patientsData) ? patientsData : patientsData?.data || [];
+          setPatients(patientsList);
         }
 
         // 3. Obtener Consultorios
         const consultoriosData = await consultoriosService.getAll();
-        setConsultorios(consultoriosData);
+        const consultoriosList = Array.isArray(consultoriosData) ? consultoriosData : consultoriosData?.data || [];
+        setConsultorios(consultoriosList);
       } catch (err) {
         console.error("Error al cargar datos maestros:", err);
         setSubmissionError(

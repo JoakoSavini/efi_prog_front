@@ -1,43 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-// Último intento de combinación de rutas: con extensión para el archivo JSX local
 import { AuthContext } from "./AuthContext.jsx";
-// Sin extensión para el archivo de servicio
 import api from "../services/api/axiosInstance";
 import authService from "../services/auth";
-
-// --- Funciones Seguras para LocalStorage ---
-
-const getStoredUser = () => {
-  const user = localStorage.getItem("user");
-  // Esto previene el SyntaxError si 'user' es null o undefined
-  try {
-    return user ? JSON.parse(user) : null;
-  } catch (e) {
-    console.error("Error al parsear el usuario del localStorage:", e);
-    return null;
-  }
-};
-
-const getStoredToken = () => {
-  return localStorage.getItem("token") || null;
-};
-
-const removeAuthData = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-};
-
-// --- Componente AuthProvider ---
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Normaliza los roles del backend (ej: 'médico') a claves consistentes en MINÚSCULAS
-   */
-  const normalizeRole = (rol) => {
+  const normalizeRole = useCallback((rol) => {
     if (!rol) return null;
     const lowerRol = rol.toLowerCase();
 
@@ -50,7 +21,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return lowerRol;
-  };
+  }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem("token");
@@ -73,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userForFrontend);
     }
     return userForFrontend;
-  }, []);
+  }, [normalizeRole]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -95,7 +66,6 @@ export const AuthProvider = ({ children }) => {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        // Corrige la advertencia del linter
       } catch {
         localStorage.removeItem("user");
       }
@@ -107,9 +77,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(
     async (credentials) => {
-      // Delegate to authService which normalizes and stores token/user
       const res = await authService.login(credentials);
-      // authService returns { token, user } or similar shape
       const tokenValue = res?.token || localStorage.getItem("token");
       const backendUser = res?.user || authService.getStoredUser();
       const userForFrontend = loginUser(tokenValue, backendUser);

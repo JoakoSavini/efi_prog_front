@@ -1,29 +1,49 @@
 import { useState } from "react";
-import Modal from "./Modal";
-import { usePatients } from "../../contexts/usePatients"; // Asume que este context está disponible
+import { usePatients } from "../../contexts/usePatients";
 
-const initialState = {
+const ModalComponent = ({ children, title, onClose }) => (
+  <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
+    <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+      <div className="flex justify-between items-start pb-3 border-b border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+        <button
+          type="button"
+          className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
+          onClick={onClose}
+        >
+          <svg
+            className="w-5 h-5"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      <div className="pt-4">{children}</div>
+    </div>
+  </div>
+);
+
+const initialPatientState = {
   nombre: "",
   apellido: "",
   email: "",
+  contraseña: "",
+  confirmar_contraseña: "",
   telefono: "",
+  dni: "",
   direccion: "",
-  fecha_nacimiento: "",
-  // Campos específicos de paciente
-  numero_historia_clinica: "",
-  genero: "",
-  grupo_sanguineo: "",
-  alergias: "",
-  antecedentes: "",
 };
 
 const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
-  const {
-    createPatient,
-    loading: loadingContext,
-    error: contextError,
-  } = usePatients();
-  const [formData, setFormData] = useState(initialState);
+  const { createPatient, loading: loadingContext, error: contextError } = usePatients();
+  const [formData, setFormData] = useState(initialPatientState);
   const [submissionError, setSubmissionError] = useState(null);
 
   const handleChange = (e) => {
@@ -35,56 +55,56 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
     e.preventDefault();
     setSubmissionError(null);
 
-    // Validación básica
-    if (!formData.nombre || !formData.email || !formData.numero_historia_clinica) {
-      setSubmissionError("Nombre, email y número de historia clínica son campos requeridos");
+    if (!formData.nombre || !formData.apellido || !formData.email || !formData.contraseña || !formData.dni || !formData.telefono) {
+      setSubmissionError("Nombre, apellido, email, DNI, teléfono y contraseña son campos requeridos");
+      return;
+    }
+
+    if (formData.contraseña !== formData.confirmar_contraseña) {
+      setSubmissionError("Las contraseñas no coinciden");
+      return;
+    }
+
+    if (formData.contraseña.length < 6) {
+      setSubmissionError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
     try {
-      console.log("Creando paciente con datos:", formData);
-      const newPatient = await createPatient(formData);
-      
-      console.log("Paciente creado:", newPatient);
+      const patientData = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        email: formData.email,
+        contraseña: formData.contraseña,
+        telefono: formData.telefono,
+        dni: formData.dni,
+        direccion: formData.direccion,
+      };
 
-      // Si tiene éxito:
+      await createPatient(patientData);
+
       if (onSuccess) onSuccess();
       onClose();
-      setFormData(initialState);
+      setFormData(initialPatientState);
     } catch (err) {
       console.error("Error al crear paciente:", err);
-      // Usar el mensaje de error del backend o uno por defecto
-      const errMsg =
-        err.response?.data?.message ||
-        err.message ||
-        contextError ||
-        "Error desconocido al crear el paciente.";
-      setSubmissionError(errMsg);
+      setSubmissionError(err.message || "Error desconocido al crear el paciente");
     }
   };
 
-  const loading = loadingContext;
+  if (!isOpen) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Registrar Nuevo Paciente"
-      size="max-w-lg" // Tamaño estándar
-    >
+    <ModalComponent title="Registrar Nuevo Paciente" onClose={onClose}>
       {(submissionError || contextError) && (
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
-          role="alert"
-        >
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
           {submissionError || contextError}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Sección de Usuario */}
         <h4 className="text-lg font-medium border-b pb-2 text-indigo-600">
-          Datos de Usuario (Requerido)
+          Datos del Paciente
         </h4>
         <div className="grid grid-cols-2 gap-4">
           <label className="block">
@@ -120,8 +140,30 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
             />
           </label>
-
-        
+          <label className="block">
+            <span className="text-gray-700">Contraseña</span>
+            <input
+              type="password"
+              name="contraseña"
+              value={formData.contraseña}
+              onChange={handleChange}
+              required
+              placeholder="Mínimo 6 caracteres"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
+            />
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Confirmar Contraseña</span>
+            <input
+              type="password"
+              name="confirmar_contraseña"
+              value={formData.confirmar_contraseña}
+              onChange={handleChange}
+              required
+              placeholder="Repite la contraseña"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
+            />
+          </label>
           <label className="block">
             <span className="text-gray-700">Teléfono</span>
             <input
@@ -129,16 +171,19 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
               name="telefono"
               value={formData.telefono}
               onChange={handleChange}
+              required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
             />
           </label>
           <label className="block">
-            <span className="text-gray-700">F. Nacimiento</span>
+            <span className="text-gray-700">DNI</span>
             <input
-              type="date"
-              name="fecha_nacimiento"
-              value={formData.fecha_nacimiento}
+              type="text"
+              name="dni"
+              value={formData.dni}
               onChange={handleChange}
+              required
+              placeholder="Ej: 12345678"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
             />
           </label>
@@ -154,78 +199,6 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
           </label>
         </div>
 
-        {/* Sección de Paciente (Opcional) */}
-        <h4 className="text-lg font-medium border-b pb-2 text-indigo-600 pt-4">
-          Datos Clínicos (Opcional)
-        </h4>
-        <div className="grid grid-cols-2 gap-4">
-          <label className="block">
-            <span className="text-gray-700">N° Historia Clínica</span>
-            <input
-              type="text"
-              name="numero_historia_clinica"
-              value={formData.numero_historia_clinica}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
-          <label className="block">
-            <span className="text-gray-700">Género</span>
-            <select
-              name="genero"
-              value={formData.genero}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
-            >
-              <option value="">Seleccionar</option>
-              <option value="M">Masculino</option>
-              <option value="F">Femenino</option>
-              <option value="O">Otro</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-gray-700">Grupo Sanguíneo</span>
-            <select
-              name="grupo_sanguineo"
-              value={formData.grupo_sanguineo}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
-            >
-              <option value="">Seleccionar</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-gray-700">Alergias</span>
-            <input
-              type="text"
-              name="alergias"
-              value={formData.alergias}
-              onChange={handleChange}
-              placeholder="Ej: Penicilina, Maní, Latex"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
-          <label className="block col-span-2">
-            <span className="text-gray-700">Antecedentes Médicos</span>
-            <textarea
-              name="antecedentes"
-              value={formData.antecedentes}
-              onChange={handleChange}
-              rows="3"
-              placeholder="Ej: Diabetes, Hipertensión, Alergias previas..."
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
-            />
-          </label>
-        </div>
-
         <div className="flex justify-end pt-4 space-x-3 border-t border-gray-200">
           <button
             type="button"
@@ -236,18 +209,18 @@ const CreatePatientModal = ({ isOpen, onClose, onSuccess }) => {
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loadingContext}
             className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors ${
-              loading
+              loadingContext
                 ? "bg-indigo-400 cursor-not-allowed"
                 : "bg-indigo-600 hover:bg-indigo-700"
             }`}
           >
-            {loading ? "Creando..." : "Crear Paciente"}
+            {loadingContext ? "Creando..." : "Crear Paciente"}
           </button>
         </div>
       </form>
-    </Modal>
+    </ModalComponent>
   );
 };
 

@@ -60,23 +60,31 @@ export default function AppointmentsTable() {
         const dateObj = fecha ? new Date(fecha) : null;
         const hora = a.hora || a.time || (dateObj ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
         
-        // Obtener nombre del paciente con múltiples fallbacks
-        let pacienteName = '';
-        if (a.paciente && typeof a.paciente === 'object') {
-          pacienteName = a.paciente.nombre || a.paciente.usuario?.nombre || '';
-          if (a.paciente.apellido) pacienteName += ` ${a.paciente.apellido}`;
-          else if (a.paciente.usuario?.apellido) pacienteName += ` ${a.paciente.usuario.apellido}`;
+        // Obtener nombre del paciente - verificar que tenga datos
+        let pacienteName = 'Sin asignar';
+        if (a.paciente_id) {
+          // Si viene con objeto paciente
+          if (a.paciente && typeof a.paciente === 'object') {
+            const nombre = a.paciente.usuario?.nombre || a.paciente.nombre || '';
+            const apellido = a.paciente.usuario?.apellido || a.paciente.apellido || '';
+            pacienteName = `${nombre} ${apellido}`.trim() || 'Sin asignar';
+          } else if (a.paciente_nombre) {
+            pacienteName = a.paciente_nombre;
+          }
         }
-        if (!pacienteName) pacienteName = a.paciente_nombre || a.patientName || a.patient?.nombre || 'Sin asignar';
         
-        // Obtener nombre del médico con múltiples fallbacks
-        let medicoName = '';
-        if (a.medico && typeof a.medico === 'object') {
-          medicoName = a.medico.nombre || a.medico.usuario?.nombre || '';
-          if (a.medico.apellido) medicoName += ` ${a.medico.apellido}`;
-          else if (a.medico.usuario?.apellido) medicoName += ` ${a.medico.usuario.apellido}`;
+        // Obtener nombre del médico - verificar que tenga datos
+        let medicoName = 'Sin asignar';
+        if (a.medico_id) {
+          // Si viene con objeto médico
+          if (a.medico && typeof a.medico === 'object') {
+            const nombre = a.medico.usuario?.nombre || a.medico.nombre || '';
+            const apellido = a.medico.usuario?.apellido || a.medico.apellido || '';
+            medicoName = `${nombre} ${apellido}`.trim() || 'Sin asignar';
+          } else if (a.medico_nombre) {
+            medicoName = a.medico_nombre;
+          }
         }
-        if (!medicoName) medicoName = a.medico_nombre || a.doctorName || 'Sin asignar';
 
         return {
           id: a.id ?? a._id,

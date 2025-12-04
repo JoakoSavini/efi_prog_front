@@ -16,10 +16,15 @@ export default function DoctorsTable() {
     { field: "telefono", headerName: "Teléfono", editable: true },
     { field: "matricula", headerName: "Matrícula", editable: true },
     { 
-      field: "especialidad", 
+      field: "especialidad_nombre", 
       headerName: "Especialidad", 
-      editable: true, 
-      options: specialties.length > 0 ? specialties.map(s => ({ value: s.id, label: s.nombre })) : [] 
+      editable: true,
+      render: (row) => {
+        const specialtyId = row.especialidad;
+        const specialty = specialties.find(s => s.id === specialtyId);
+        return specialty ? specialty.nombre : "Sin especialidad";
+      },
+      options: specialties.length > 0 ? specialties.map(s => ({ value: s.nombre, label: s.nombre })) : [] 
     },
     { field: "horario_inicio", headerName: "Horario Inicio", editable: true },
     { field: "horario_fin", headerName: "Horario Fin", editable: true },
@@ -35,7 +40,14 @@ export default function DoctorsTable() {
   async function loadSpecialties() {
     try {
       const data = await doctorsService.getSpecialties();
-      setSpecialties(Array.isArray(data) ? data : []);
+      const specialtiesArray = Array.isArray(data) ? data : [];
+      
+      // Eliminar duplicados por ID
+      const uniqueSpecialties = Array.from(
+        new Map(specialtiesArray.map(item => [item.id, item])).values()
+      );
+      
+      setSpecialties(uniqueSpecialties);
     } catch (err) {
       console.error("Error cargando especialidades:", err);
     }
@@ -57,7 +69,8 @@ export default function DoctorsTable() {
           email: d.usuario?.correo || d.usuario?.email || "",
           telefono: d.usuario?.telefono || "",
           matricula: d.matricula || "",
-          especialidad: d.especialidad?.id || d.id_especialidad || "",
+          especialidad: d.id_especialidad || d.especialidad?.id || "", // Guardar el ID
+          especialidad_nombre: d.especialidad?.nombre || "", // Mostrar el nombre
           horario_inicio: d.horario_inicio || "",
           horario_fin: d.horario_fin || "",
           estado: d.estado !== undefined ? d.estado : true,
@@ -78,12 +91,19 @@ export default function DoctorsTable() {
     delete out.id;
     delete out.creado;
     delete out.raw;
+    delete out.especialidad_nombre; // Eliminar el campo de visualización
     
-    // Mapear especialidad a especialidad_id
-    if (out.especialidad) {
+    // Si cambió el nombre de especialidad, buscar el ID correspondiente
+    if (input.especialidad_nombre && input.especialidad_nombre !== "") {
+      const specialty = specialties.find(s => s.nombre === input.especialidad_nombre);
+      if (specialty) {
+        out.especialidad_id = specialty.id;
+      }
+    } else if (out.especialidad) {
+      // Si no cambió el nombre, usar el ID que ya tenemos
       out.especialidad_id = out.especialidad;
-      delete out.especialidad;
     }
+    delete out.especialidad;
     
     return out;
   }

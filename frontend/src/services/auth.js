@@ -43,7 +43,7 @@ const authService = {
         apellido: userData.apellido || userData.lastName || userData.surname,
         correo: userData.correo || userData.email,
         contraseña: userData.contraseña || userData.password,
-        rol: userData.rol || userData.role,
+        rol: userData.rol || userData.role || "paciente",
         telefono: userData.telefono || userData.phone,
         direccion: userData.direccion || userData.address,
       };

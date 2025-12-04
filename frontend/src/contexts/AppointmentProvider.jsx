@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import AppointmentContext from "./AppointmentContext";
+import { AppointmentContext } from "./AppointmentContext";
 import appointmentsService from "../services/appointments";
 
 export const AppointmentProvider = ({ children }) => {

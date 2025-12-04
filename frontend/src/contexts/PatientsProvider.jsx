@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import PatientsContext from "./PatientsContext";
 import patientsService from "../services/patients";
+import authService from "../services/auth";
 
 export const PatientsProvider = ({ children }) => {
   const [patients, setPatients] = useState([]);
@@ -48,31 +49,51 @@ export const PatientsProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      // Payload que coincida con el modelo Paciente del backend
-      const payload = {
+      const authPayload = {
         nombre: patientData.nombre,
         apellido: patientData.apellido,
-        email: patientData.email,
+        correo: patientData.email || patientData.correo,
+        contraseña: patientData.contraseña,
+        rol: "paciente",
         telefono: patientData.telefono,
-        direccion: patientData.direccion,
-        fecha_nacimiento: patientData.fecha_nacimiento,
-        // Campos específicos del modelo Paciente
-        numero_historia_clinica: patientData.numero_historia_clinica,
-        genero: patientData.genero,
-        grupo_sanguineo: patientData.grupo_sanguineo,
-        alergias: patientData.alergias,
-        antecedentes: patientData.antecedentes
+        dni: patientData.dni,
       };
 
-      const created = await patientsService.create(payload);
+      if (patientData.direccion) authPayload.direccion = patientData.direccion;
+
+      const registerResponse = await authService.register(authPayload);
+      console.log("Usuario creado:", registerResponse);
       
-      // Actualizar lista local
-      setPatients((prev) => [...prev, created]);
-      return created;
+      const userId = registerResponse?.user?.id;
+      
+      if (!userId) {
+        throw new Error("No se pudo obtener el ID del usuario creado");
+      }
+
+      const patientPayload = {
+        usuario_id: userId,
+        telefono: patientData.telefono,
+        dni: patientData.dni,
+      };
+
+      if (patientData.direccion) patientPayload.direccion = patientData.direccion;
+      if (patientData.fecha_nacimiento) patientPayload.fecha_nacimiento = patientData.fecha_nacimiento;
+      if (patientData.numero_historia_clinica) patientPayload.numero_historia_clinica = patientData.numero_historia_clinica;
+      if (patientData.genero) patientPayload.genero = patientData.genero;
+      if (patientData.grupo_sanguineo) patientPayload.grupo_sanguineo = patientData.grupo_sanguineo;
+      if (patientData.alergias) patientPayload.alergias = patientData.alergias;
+      if (patientData.antecedentes) patientPayload.antecedentes = patientData.antecedentes;
+
+      console.log("Payload para crear paciente:", patientPayload);
+      const pacientCreated = await patientsService.create(patientPayload);
+      console.log("Paciente creado exitosamente:", pacientCreated);
+      
+      setPatients((prev) => [...prev, pacientCreated]);
+      return pacientCreated;
     } catch (err) {
-      const errorMsg = err.message || "Error al crear paciente";
+      const errorMsg = err.message || err || "Error al crear paciente";
       setError(errorMsg);
-      console.error("Error en createPatient:", err);
+      console.error("Error completo en createPatient:", err);
       throw err;
     } finally {
       setLoading(false);

@@ -6,10 +6,7 @@ import Toast from "../../components/Toast";
 const Login = () => {
   const navigate = useNavigate();
   const { login, user: authUser } = useAuth();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+
   // Usamos nombres de estado estándar para formularios
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,12 +31,12 @@ const Login = () => {
     try {
       // 1. Crear el objeto de credenciales con los nombres que espera la API
       const credentials = {
-        correo: email, // Mapea 'email' a 'correo'
-        contraseña: password, // Mapea 'password' a 'contraseña'
+        email: email,
+        password: password,
       };
 
-      // 🚨 CORRECCIÓN: Usar encadenamiento opcional (response.user?.role)
-      // Y manejar el caso donde el usuario no se recibe o el rol no existe.
+      // 2. Llamar a la función login del contexto
+      const response = await login(credentials);
 
       // Prefer normalized role from response, fallback to auth context
       const userRole = response.user?.role || authUser?.role || response.user?.rol;
